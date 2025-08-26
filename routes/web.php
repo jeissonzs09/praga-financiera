@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\PrestamoController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -24,6 +26,24 @@ Route::middleware('auth')->group(function () {
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
+    Route::get('/clientes/create', [ClienteController::class, 'create'])->name('clientes.create');
+    Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
+    Route::get('/clientes/{id}', [ClienteController::class, 'show'])->name('clientes.show');
+});
+
+Route::get('/clientes/{cliente}', [ClienteController::class, 'show'])->name('clientes.show');
+
+
+Route::get('/prestamos', [PrestamoController::class, 'index'])->name('prestamos.index');
+Route::get('/prestamos/create', [PrestamoController::class, 'create'])->name('prestamos.create');
+Route::post('/prestamos', [PrestamoController::class, 'store'])->name('prestamos.store');
+
+
+
+
 
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.
 //require __DIR__.'/auth.php';
