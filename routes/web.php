@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\PrestamoController;
+use App\Http\Controllers\PagoController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -40,6 +41,18 @@ Route::get('/clientes/{cliente}', [ClienteController::class, 'show'])->name('cli
 Route::get('/prestamos', [PrestamoController::class, 'index'])->name('prestamos.index');
 Route::get('/prestamos/create', [PrestamoController::class, 'create'])->name('prestamos.create');
 Route::post('/prestamos', [PrestamoController::class, 'store'])->name('prestamos.store');
+
+Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
+Route::get('/pagos/{prestamo}/plan', [PagoController::class, 'plan'])
+    ->name('pagos.plan');
+
+Route::get('/pagos/{prestamo}/crear', [PagoController::class, 'create'])->name('pagos.create');
+Route::post('/pagos', [PagoController::class, 'store'])->name('pagos.store');
+
+    
+    
+
+
 
 
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PRAGA | Panel Institucional</title>
+    <title>PRAGA</title>
 
     <!-- Fuente institucional -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -164,10 +164,11 @@
         <i class="fas fa-hand-holding-usd"></i>
         <span>Préstamos</span>
     </a>
-        <a href="#">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 8h14v-2H7v2zm0-4h14v-2H7v2zm0-6v2h14V7H7z"/></svg>
-            Reportes
-        </a>
+        <a href="{{ route('pagos.index') }}" 
+       class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-indigo-600">
+        <i class="fas fa-money-bill-wave mr-2"></i> 
+        Registrar Pagos
+    </a>
         <a href="#">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 4h16v2H4zm0 4h10v2H4zm0 4h16v2H4zm0 4h10v2H4zm0 4h16v2H4z"/></svg>
             Inventario

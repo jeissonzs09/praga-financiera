@@ -26,4 +26,10 @@ class Prestamo extends Model
         // 'cliente_id' en prestamos -> 'id_cliente' en clientes
         return $this->belongsTo(Cliente::class, 'cliente_id', 'id_cliente');
     }
+
+    public function pagos()
+{
+    return $this->hasMany(Pago::class);
+}
+
 }
