@@ -6,6 +6,7 @@ use App\Models\Prestamo;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Pago;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PagoController extends Controller
 {
@@ -299,30 +300,29 @@ public function planOriginal($id)
     return view('pagos.plan_original', compact('prestamo', 'cuotas', 'totales'));
 }
 
+
 public function recibo($pagoId)
 {
     $pago = Pago::with(['prestamo.cliente'])->findOrFail($pagoId);
     $prestamo = $pago->prestamo;
     $cliente  = $prestamo->cliente;
 
-    // Saldo anterior = saldo actual + lo que se abonó a capital en este pago
+    // Cálculos
     $saldo_actual  = $prestamo->valor_prestamo - $prestamo->pagos()->where('id_pago', '<=', $pago->id_pago)->sum('monto');
-    $abono_capital = $pago->monto; // Si tuvieras desglose capital/interés, ajusta aquí
+    $abono_capital = $pago->monto;
     $saldo_anterior = $saldo_actual + $abono_capital;
-
-    // Monto en letras (puedes crear un helper para convertir número a letras)
     $monto_letras = ucfirst($this->numeroALetras($pago->monto));
 
-    // Detalle de cuotas: aquí puedes calcular el desglose real por cuota
     $detalle_cuotas = [[
         'cuota'   => $pago->cuota_numero,
-        'interes' => 0.00, // O lo que corresponda
+        'interes' => 0.00,
         'capital' => $pago->monto,
         'recargo' => 0.00,
         'total'   => $pago->monto
     ]];
 
-    return view('pagos.recibo', compact(
+    // Renderizar vista en PDF
+    $pdf = Pdf::loadView('pagos.recibo', compact(
         'pago',
         'prestamo',
         'cliente',
@@ -331,7 +331,11 @@ public function recibo($pagoId)
         'saldo_actual',
         'monto_letras',
         'detalle_cuotas'
-    ));
+    ))->setPaper('letter');
+
+    // Descargar directamente
+    $nombreArchivo = 'Recibo-'.$cliente->nombre_completo.'-'.$pago->id_pago.'.pdf';
+    return $pdf->download($nombreArchivo);
 }
 
 // Helper rápido dentro del mismo controlador (o mejor en uno global)
