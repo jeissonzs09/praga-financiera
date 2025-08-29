@@ -34,9 +34,9 @@
                             L. {{ number_format($saldo, 2) }}
                         </td>
                         <td class="px-4 py-2 text-center">
-                            <span class="px-2 py-1 rounded text-white text-xs font-semibold {{ $saldo <= 0 ? 'bg-green-600' : 'bg-blue-600' }}">
-                                {{ $saldo <= 0 ? 'Finalizado' : 'Activo' }}
-                            </span>
+                            <span class="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                    {{ ucfirst($prestamo->estado) }}
+                                </span>
                         </td>
                         <td class="px-4 py-2 text-center space-x-1">
                             <!-- Botones de acciones -->

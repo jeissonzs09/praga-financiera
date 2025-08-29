@@ -9,15 +9,26 @@ use Illuminate\Http\Request;
 class PrestamoController extends Controller
 {
     // Listado de préstamos activos
-    public function index()
-    {
-        $prestamos = Prestamo::where('estado', 'Activo')
-                             ->with('cliente')
-                             ->latest()
-                             ->get();
+    public function index(Request $request)
+{
+    $query = Prestamo::with('cliente')->latest();
 
-        return view('prestamos.index', compact('prestamos'));
+    // 📌 Filtro por nombre de cliente
+    if ($request->filled('buscar')) {
+        $query->whereHas('cliente', function ($q) use ($request) {
+            $q->where('nombre_completo', 'like', '%' . $request->buscar . '%');
+        });
     }
+
+    // 📌 Filtro por estado
+    if ($request->filled('estado')) {
+        $query->where('estado', $request->estado);
+    }
+
+    $prestamos = $query->get();
+
+    return view('prestamos.index', compact('prestamos'));
+}
 
     // Formulario para crear un préstamo
     public function create()

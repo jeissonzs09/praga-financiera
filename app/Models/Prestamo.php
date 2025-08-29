@@ -32,4 +32,6 @@ class Prestamo extends Model
     return $this->hasMany(Pago::class);
 }
 
+
+
 }

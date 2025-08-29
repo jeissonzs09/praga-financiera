@@ -18,7 +18,7 @@ class Pago extends Model
 
     protected $fillable = [
         'prestamo_id',
-        'fecha_pago',
+        'cuota_numero',
         'monto',
         'observaciones',
     ];

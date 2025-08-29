@@ -25,6 +25,11 @@
             justify-content: space-between;
             align-items: center;
             height: 60px;
+            position: fixed;     /* 🚀 Fija la barra */
+    top: 0;              /* Pegada al borde superior */
+    left: 0;
+    right: 0;
+    z-index: 1100;       /* Por encima del sidebar y contenido */
         }
 
         .nav-left {
@@ -101,7 +106,7 @@
        .main-content {
     margin-left: 220px;
     padding: 2rem;
-    margin-top: 60px;
+    margin-top: 60px; /* igual que la altura de la barra */
     transition: margin-left 0.5s ease;
 }
 

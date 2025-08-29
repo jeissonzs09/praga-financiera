@@ -19,29 +19,13 @@
     </div>
 
 <div class="mb-4 flex justify-end gap-2">
-    @if($prestamo->estado !== 'Finalizado')
-        <button
-            type="button"
-            onclick="abrirModalPago()"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
-        >
-            Registrar pago
-        </button>
-    @endif
-
-    <a href="{{ route('pagos.historial', $prestamo->id) }}"
-       class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow">
-        Ver registro de pagos
-    </a>
-
-    <a href="{{ route('pagos.plan.original', $prestamo->id) }}"
-   class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow">
-    Ver plan original
+<a href="{{ route('pagos.plan', $prestamo->id) }}"
+   class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+    ← Volver al plan actual
 </a>
-
 </div>
 
-
+    
 
     <!-- Tabla del plan -->
     <div class="overflow-x-auto bg-white rounded-lg shadow">

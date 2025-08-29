@@ -49,10 +49,19 @@ Route::get('/pagos/{prestamo}/plan', [PagoController::class, 'plan'])
 Route::get('/pagos/{prestamo}/crear', [PagoController::class, 'create'])->name('pagos.create');
 Route::post('/pagos', [PagoController::class, 'store'])->name('pagos.store');
 
-    
-    
+Route::get('pagos/{prestamo}/crear', [\App\Http\Controllers\PagoController::class, 'createPago'])
+    ->name('pagos.create');
 
+Route::post('pagos/{prestamo}', [\App\Http\Controllers\PagoController::class, 'storePago'])
+    ->name('pagos.store');
 
+    Route::get('pagos/{prestamo}/historial', [\App\Http\Controllers\PagoController::class, 'historial'])
+    ->name('pagos.historial');
+
+    Route::get('pagos/{prestamo}/plan-original', [PagoController::class, 'planOriginal'])
+    ->name('pagos.plan.original');
+
+Route::get('pagos/{pago}/recibo', [PagoController::class, 'recibo'])->name('pagos.recibo');
 
 
 

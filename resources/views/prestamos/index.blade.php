@@ -14,6 +14,24 @@
         </a>
     </div>
 
+    <form method="GET" action="{{ route('prestamos.index') }}" class="mb-4 flex flex-wrap gap-2 items-center">
+    <input type="text" name="buscar" value="{{ request('buscar') }}"
+           placeholder="Buscar por cliente"
+           class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+
+    <select name="estado" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+        <option value="">-- Todos los estados --</option>
+        <option value="Activo" {{ request('estado') === 'Activo' ? 'selected' : '' }}>Activo</option>
+        <option value="Finalizado" {{ request('estado') === 'Finalizado' ? 'selected' : '' }}>Finalizado</option>
+    </select>
+
+    <button type="submit"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
+        Filtrar
+    </button>
+</form>
+
+
     <div class="overflow-x-auto bg-white rounded-lg shadow">
         
         <table class="min-w-full text-sm text-gray-800">
@@ -27,6 +45,7 @@
                     <th class="px-4 py-3 text-left">Plazo</th>
                     <th class="px-4 py-3 text-left">Periodo</th>
                     <th class="px-4 py-3 text-left">Fecha</th>
+                    <th class="px-4 py-3 text-left">Estado</th>
                     <th class="px-4 py-3 text-center">Acciones</th>
                 </tr>
             </thead>
@@ -41,12 +60,28 @@
                         <td class="px-4 py-2">{{ $prestamo->plazo }} meses</td>
                         <td class="px-4 py-2">{{ $prestamo->periodo }}</td>
                         <td class="px-4 py-2">{{ $prestamo->created_at->format('d/m/Y') }}</td>
-                        <td class="px-4 py-2 text-center">
+                        <td class="px-4 py-2">
+                            @if(strtolower($prestamo->estado) === 'activo')
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                    {{ ucfirst($prestamo->estado) }}
+                                </span>
+                            @else
+                                <span class="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800">
+                                    {{ ucfirst($prestamo->estado) }}
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-2 text-center space-x-1">
+                            <!-- Botones de acciones -->
+                            <a href="{{ route('pagos.plan', $prestamo->id) }}" 
+                               class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs">
+                                <i class="fas fa-list"></i> Plan
+                            </a>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="px-4 py-4 text-center text-gray-500 italic">
+                        <td colspan="10" class="px-4 py-4 text-center text-gray-500 italic">
                             No hay préstamos activos registrados.
                         </td>
                     </tr>
