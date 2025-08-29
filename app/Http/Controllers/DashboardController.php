@@ -42,4 +42,31 @@ class DashboardController extends Controller
             'pagos_mes_data'
         ));
     }
+
+public function eventosPagos()
+{
+    $eventos = [];
+
+    // Traer préstamos activos con cliente y pagos
+    $prestamos = \App\Models\Prestamo::with(['cliente', 'pagos'])->get();
+
+    foreach ($prestamos as $prestamo) {
+        $cuotas = $this->generarPlan($prestamo);
+
+        foreach ($cuotas as $cuota) {
+            if ($cuota['estado'] !== 'Pagada') {
+                // convertir fecha d/m/Y a Y-m-d
+                $fecha = \Carbon\Carbon::createFromFormat('d/m/Y', $cuota['vence'])->format('Y-m-d');
+
+                $eventos[] = [
+                    'title' => $prestamo->cliente->nombre_completo,
+                    'start' => $fecha,
+                    'color' => '#3b82f6'
+                ];
+            }
+        }
+    }
+
+    return response()->json($eventos);
+}
 }

@@ -65,6 +65,8 @@ Route::post('pagos/{prestamo}', [\App\Http\Controllers\PagoController::class, 's
 Route::get('pagos/{pago}/recibo', [PagoController::class, 'recibo'])->name('pagos.recibo');
 
 
+Route::get('/eventos-pagos', [DashboardController::class, 'eventosPagos'])
+    ->middleware(['auth']);
 
 
 
