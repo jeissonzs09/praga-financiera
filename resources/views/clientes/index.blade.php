@@ -7,7 +7,18 @@
 @section('content')
 <div class="p-4">
 
-    <div class="mb-4 flex justify-end">
+    <!-- Buscador -->
+    <div class="mb-4 flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4">
+        <form action="{{ route('clientes.index') }}" method="GET" class="flex gap-2 w-full md:w-auto">
+            <input type="text" name="search" value="{{ request('search') }}" 
+                   placeholder="Buscar por nombre..." 
+                   class="border border-gray-300 rounded px-3 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
+                Buscar
+            </button>
+        </form>
+
         <a href="{{ route('clientes.create') }}"
            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
             <i class="fas fa-user-plus"></i> Nuevo Cliente
@@ -15,7 +26,6 @@
     </div>
 
     <div class="overflow-x-auto bg-white rounded-lg shadow">
-        
         <table class="min-w-full text-sm text-gray-800">
             <thead class="bg-blue-900 text-white text-sm uppercase">
                 <tr>

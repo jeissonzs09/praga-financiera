@@ -7,12 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Cliente extends Model
 {
     protected $table = 'clientes';
-    protected $primaryKey = 'id_cliente'; // clave primaria real en tu BD
+    protected $primaryKey = 'id_cliente';
     public $incrementing = true;
     protected $keyType = 'int';
 
     protected $fillable = [
-        // Datos personales
+        // --- SOLICITUD ---
+        'fecha_solicitud',
+        'fecha_aprobacion',
+        'motivo_credito',
+
+        // --- DATOS PERSONALES ---
         'nombre_completo',
         'fecha_nacimiento',
         'edad',
@@ -21,40 +26,50 @@ class Cliente extends Model
         'identificacion',
         'rtn',
         'sexo',
+        'tipo_identificacion',
         'estado_civil',
         'direccion',
+        'telefono_residencia',
 
-        // Cónyuge
+        // --- CÓNYUGE ---
         'conyuge_nombre',
         'conyuge_telefono',
         'conyuge_celular',
 
-        // Laboral
+        // --- LABORAL ---
         'correo',
         'hijos',
+        'hijas',
         'profesion',
         'negocio',
         'actividad_economica',
         'cargo',
         'tipo_labor',
+        'empresa',
         'direccion_empresa',
         'telefono_trabajo',
 
-        // Referencias
+        // --- REFERENCIAS ---
         'referencia1',
         'referencia2',
 
-        // Ingresos
+        // --- INGRESOS Y GARANTÍAS ---
         'ingresos',
+        'nivel_ingreso',
+        'garantia',
 
-        // Declaración
+        // --- ARCHIVOS ---
+        'identidad_img',
+        'fotos_garantias',
+        'contrato_pdf',
+
+        // --- DECLARACIÓN ---
         'declaracion',
     ];
 
     // Relación con préstamos
     public function prestamos()
     {
-        // cliente_id en préstamos → id_cliente en clientes
         return $this->hasMany(Prestamo::class, 'cliente_id', 'id_cliente');
     }
 }

@@ -44,10 +44,6 @@
                                class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs">
                                 <i class="fas fa-list"></i> Plan
                             </a>
-                            <a href="{{ route('pagos.create', $prestamo->id) }}" 
-                               class="inline-flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs">
-                                <i class="fas fa-plus"></i> Pago
-                            </a>
                         </td>
                     </tr>
                 @empty

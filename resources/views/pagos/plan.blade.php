@@ -114,6 +114,17 @@
                 <input type="number" step="0.01" name="monto" required
                        class="border rounded px-3 py-2 w-full">
             </div>
+
+            <!-- Nuevo campo: Método de pago -->
+            <div class="mb-3">
+                <label class="block text-sm font-medium">Método de pago</label>
+                <select name="metodo_pago" required class="border rounded px-3 py-2 w-full">
+                    <option value="">Seleccione...</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Transferencia">Transferencia</option>
+                </select>
+            </div>
+
             <div class="mb-3">
                 <label class="block text-sm font-medium">Observaciones</label>
                 <textarea name="observaciones" class="border rounded px-3 py-2 w-full"></textarea>

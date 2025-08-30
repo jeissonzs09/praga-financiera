@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @php
-    $titulo = 'Listado de Préstamos Activos';
+    $titulo = 'Listado de Préstamos';
 @endphp
 
 @section('content')

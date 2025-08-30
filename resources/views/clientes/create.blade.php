@@ -29,7 +29,7 @@
         </div>
     @endif
 
-    <form action="{{ route('clientes.store') }}" method="POST" class="form-2cols">
+    <form action="{{ route('clientes.store') }}" method="POST" class="form-2cols" enctype="multipart/form-data">
         @csrf
 
         <!-- Columna Izquierda -->
@@ -134,7 +134,31 @@
                 <input type="text" name="referencia1" placeholder="Referencia 1" class="border rounded px-3 py-2">
                 <input type="text" name="referencia2" placeholder="Referencia 2" class="border rounded px-3 py-2">
             </div>
+
+<!-- IDENTIDAD DEL CLIENTE -->
+<h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Identidad del Cliente</h3>
+<div class="space-y-2">
+    <input type="file" name="identidad_img[]" accept="image/*" multiple class="w-full border rounded px-3 py-2">
+    <small class="text-gray-500">Suba ambas caras de la identidad (JPG, PNG, etc.).</small>
+</div>
+
+
+                        <!-- SUBIDA DE FOTOGRAFÍAS DE GARANTÍAS -->
+<h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Fotografías de Garantías</h3>
+<div class="space-y-2">
+    <input type="file" name="fotos_garantias[]" accept="image/*" multiple class="w-full border rounded px-3 py-2">
+    <small class="text-gray-500">Puede seleccionar varias imágenes (formatos JPG, PNG, etc.).</small>
+</div>
+
+<!-- SUBIDA DE CONTRATO EN PDF -->
+<h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Contrato</h3>
+<div class="space-y-2">
+    <input type="file" name="contrato_pdf" accept="application/pdf" class="w-full border rounded px-3 py-2">
+    <small class="text-gray-500">Solo formato PDF.</small>
+</div>
         </div>
+
+        
 
         <!-- Columna Derecha -->
         <div class="space-y-6">
@@ -191,6 +215,7 @@
                     <input type="text" name="garantia[]" placeholder="{{ $i }}." class="w-full border rounded px-3 py-2">
                 @endfor
             </div>
+
 
             <!-- DECLARACIÓN -->
             <h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Declaración</h3>
