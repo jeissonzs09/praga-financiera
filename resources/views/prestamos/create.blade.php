@@ -8,23 +8,23 @@
 <div class="p-4 max-w-5xl mx-auto bg-white rounded shadow">
 
     <form action="{{ route('prestamos.store') }}" method="POST" class="space-y-8">
-        @if($errors->any())
-    <div class="bg-red-100 text-red-700 p-3 rounded">
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>• {{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
-
-@if(session('success'))
-    <div class="bg-green-100 text-green-700 p-3 rounded">
-        {{ session('success') }}
-    </div>
-@endif
-
         @csrf
+
+        @if($errors->any())
+            <div class="bg-red-100 text-red-700 p-3 rounded">
+                <ul>
+                    @foreach($errors->all() as $error)
+                        <li>• {{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        @if(session('success'))
+            <div class="bg-green-100 text-green-700 p-3 rounded">
+                {{ session('success') }}
+            </div>
+        @endif
 
         <!-- Cliente -->
         <div>
@@ -100,8 +100,13 @@
         <p><strong>Total a pagar:</strong> <span id="total"></span></p>
         <p><strong>Intereses:</strong> <span id="intereses"></span></p>
     </div>
-</div>
 
+    <!-- Tabla de cuotas simuladas -->
+    <div id="tabla-cuotas" class="mt-6"></div>
+</div>
+@endsection
+
+@section('scripts')
 <script>
 document.getElementById('btn-calcular').addEventListener('click', function () {
     const monto = parseFloat(document.querySelector('[name="valor_prestamo"]').value);
@@ -114,35 +119,83 @@ document.getElementById('btn-calcular').addEventListener('click', function () {
         return;
     }
 
-    // 1) Pagos por mes según periodo seleccionado
     let pagosPorMes = 1;
     if (periodo === 'Quincenal') pagosPorMes = 2;
     else if (periodo === 'Semanal') pagosPorMes = 4;
 
-    // 2) Número total de cuotas
     const cuotas = plazoMeses * pagosPorMes;
-
-    // 3) Capital fijo por cuota
     const capitalFijo = monto / cuotas;
-
-    // 4) Tasa del periodo (mensual dividido entre pagos por mes)
     const tasaPorPeriodo = tasaMensual / pagosPorMes;
-
-    // 5) Interés fijo por cuota (sobre monto inicial)
     const interesPorCuota = monto * tasaPorPeriodo;
-
-    // 6) Cuota total
     const cuotaTotal = capitalFijo + interesPorCuota;
-
-    // 7) Totales
     const totalIntereses = interesPorCuota * cuotas;
     const totalPagar = monto + totalIntereses;
 
-    // 8) Mostrar resultados
     document.getElementById('cuota').textContent = 'L. ' + cuotaTotal.toFixed(2);
     document.getElementById('total').textContent = 'L. ' + totalPagar.toFixed(2);
     document.getElementById('intereses').textContent = 'L. ' + totalIntereses.toFixed(2);
     document.getElementById('resultado').classList.remove('hidden');
+
+    const formData = new FormData();
+    formData.append('valor_prestamo', monto);
+    formData.append('porcentaje_interes', tasaMensual * 100);
+    formData.append('plazo', plazoMeses);
+    formData.append('periodo', periodo);
+    formData.append('_token', '{{ csrf_token() }}');
+
+    fetch('{{ route("prestamos.simular") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(cuotas => {
+        mostrarTablaCuotas(cuotas);
+    })
+    .catch(async error => {
+    try {
+        const data = await error.response.json();
+        console.error('Error del backend:', data);
+        alert('Error: ' + data.mensaje + '\nLínea: ' + data.linea + '\nArchivo: ' + data.archivo);
+    } catch (e) {
+        console.error('Error inesperado:', error);
+        alert('No se pudo cargar el plan de pago. Revisa la consola para más detalles.');
+    }
+    });
 });
+
+
+function mostrarTablaCuotas(cuotas) {
+    let html = `
+        <h3 class="font-semibold mb-3">Plan de pago simulado</h3>
+        <table class="w-full text-sm border rounded overflow-hidden">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-2 py-1">#</th>
+                    <th class="px-2 py-1">Vence</th>
+                    <th class="px-2 py-1">Capital</th>
+                    <th class="px-2 py-1">Interés</th>
+                    <th class="px-2 py-1">Total</th>
+                    <th class="px-2 py-1">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    cuotas.forEach(c => {
+        html += `
+            <tr class="border-t">
+                <td class="text-center px-2 py-1">${c.nro}</td>
+                <td class="px-2 py-1">${c.vence}</td>
+                <td class="px-2 py-1">L. ${c.capital.toFixed(2)}</td>
+                <td class="px-2 py-1">L. ${c.interes.toFixed(2)}</td>
+                <td class="px-2 py-1 font-bold">L. ${c.pendiente.toFixed(2)}</td>
+                <td class="px-2 py-1">${c.estado}</td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('tabla-cuotas').innerHTML = html;
+}
 </script>
 @endsection

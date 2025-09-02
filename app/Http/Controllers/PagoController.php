@@ -62,7 +62,9 @@ private function generarPlan(Prestamo $prestamo)
     $cuotas = [];
 
     // Total acumulado pagado (en orden)
-    $totalPagos = $prestamo->pagos->sum('monto');
+    $totalPagos = $prestamo->relationLoaded('pagos') && $prestamo->pagos
+    ? $prestamo->pagos->sum('monto')
+    : 0;
 
     for ($i = 1; $i <= $numeroCuotas; $i++) {
         $vence = match($frecuencia) {
@@ -417,7 +419,31 @@ private function numeroALetras($numero)
     return trim($texto) . " lempiras con {$decimal}/100";
 }
 
+public function simularPlan(Request $request)
+{
+    try {
+        $prestamo = new \App\Models\Prestamo([
+            'valor_prestamo'     => $request->valor_prestamo,
+            'porcentaje_interes' => $request->porcentaje_interes,
+            'plazo'              => $request->plazo,
+            'periodo'            => $request->periodo,
+            'created_at'         => now()
+        ]);
 
+        // En simulación no hay pagos, así que forzamos una colección vacía
+        $prestamo->setRelation('pagos', collect());
 
+        $cuotas = $this->generarPlan($prestamo);
+
+        return response()->json($cuotas);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error'   => 'Error interno',
+            'mensaje' => $e->getMessage(),
+            'linea'   => $e->getLine(),
+            'archivo' => $e->getFile()
+        ], 500);
+    }
+}
 
 }
