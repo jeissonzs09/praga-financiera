@@ -8,8 +8,6 @@ use App\Http\Controllers\PrestamoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DashboardController;
 
-Route::post('/simular-plan', [PagoController::class, 'simularPlan'])
-    ->name('prestamos.simular');
 
 Route::get('/', function () {
     return view('welcome');
@@ -71,6 +69,8 @@ Route::get('pagos/{pago}/recibo', [PagoController::class, 'recibo'])->name('pago
 Route::get('/eventos-pagos', [DashboardController::class, 'eventosPagos'])
     ->middleware(['auth']);
 
+    Route::post('/simular-plan', [PagoController::class, 'simularPlan'])
+    ->name('prestamos.simular');
 
 
 

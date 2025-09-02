@@ -43,19 +43,16 @@ private function generarPlan(Prestamo $prestamo)
     $capitalTotal = (float) $prestamo->valor_prestamo;
     $tasa         = (float) $prestamo->porcentaje_interes;
 
+    // Mapeo de frecuencia a pagos por mes
     $map = ['mensual' => 1, 'quincenal' => 2, 'semanal' => 4];
-    $numeroCuotas = $plazoMeses * ($map[$frecuencia] ?? 1);
+    $pagosPorMes = $map[$frecuencia] ?? 1;
+    $numeroCuotas = $plazoMeses * $pagosPorMes;
 
+    // Cálculo consistente con el frontend
     $capitalPorCuota = round($capitalTotal / $numeroCuotas, 2);
-    $interesTotal    = $capitalTotal * ($tasa / 100);
-
-    if ($frecuencia === 'mensual') {
-        $interesPorCuota = round($interesTotal / $numeroCuotas, 2);
-    } elseif ($frecuencia === 'quincenal') {
-        $interesPorCuota = round($interesTotal / 2, 2);
-    } else {
-        $interesPorCuota = round($interesTotal / 4, 2);
-    }
+    $tasaPorPeriodo = ($tasa / 100) / $pagosPorMes;
+    $interesPorCuota = round($capitalTotal * $tasaPorPeriodo, 2);
+    $totalCuota = $capitalPorCuota + $interesPorCuota;
 
     $saldo  = $capitalTotal;
     $inicio = \Carbon\Carbon::parse($prestamo->created_at);
@@ -63,8 +60,8 @@ private function generarPlan(Prestamo $prestamo)
 
     // Total acumulado pagado (en orden)
     $totalPagos = $prestamo->relationLoaded('pagos') && $prestamo->pagos
-    ? $prestamo->pagos->sum('monto')
-    : 0;
+        ? $prestamo->pagos->sum('monto')
+        : 0;
 
     for ($i = 1; $i <= $numeroCuotas; $i++) {
         $vence = match($frecuencia) {
@@ -75,7 +72,6 @@ private function generarPlan(Prestamo $prestamo)
 
         $capitalRestante = $capitalPorCuota;
         $interesRestante = $interesPorCuota;
-        $totalCuota = $capitalPorCuota + $interesPorCuota;
 
         if ($totalPagos >= $totalCuota) {
             // Pagada completamente
@@ -136,7 +132,6 @@ private function generarPlan(Prestamo $prestamo)
 
     return $cuotas;
 }
-
 
 public function createPago($prestamoId)
 {
