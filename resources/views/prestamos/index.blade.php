@@ -72,12 +72,28 @@
                             @endif
                         </td>
                         <td class="px-4 py-2 text-center space-x-1">
-                            <!-- Botones de acciones -->
-                            <a href="{{ route('pagos.plan', $prestamo->id) }}" 
-                               class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs">
-                                <i class="fas fa-list"></i> Plan
-                            </a>
-                        </td>
+    <!-- Botón Plan -->
+    <a href="{{ route('pagos.plan', $prestamo->id) }}" 
+       class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs">
+        <i class="fas fa-list"></i> Plan
+    </a>
+
+    <!-- Botón Eliminar (solo si NO está finalizado) -->
+    @if(strtolower($prestamo->estado) !== 'finalizado')
+        <form action="{{ route('prestamos.destroy', $prestamo->id) }}" 
+              method="POST" 
+              class="inline-block"
+              onsubmit="return confirm('¿Seguro que deseas eliminar este préstamo? Esta acción no se puede deshacer.')">
+            @csrf
+            @method('DELETE')
+            <button type="submit" 
+                    class="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs">
+                <i class="fas fa-trash-alt"></i> Eliminar
+            </button>
+        </form>
+    @endif
+</td>
+
                     </tr>
                 @empty
                     <tr>

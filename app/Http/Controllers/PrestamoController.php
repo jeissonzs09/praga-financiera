@@ -57,4 +57,19 @@ public function store(Request $request)
     return redirect()->route('prestamos.index')
                      ->with('success', 'Préstamo guardado correctamente.');
 }
+
+public function destroy(Prestamo $prestamo)
+{
+    // Si quieres, puedes validar aquí también que no esté finalizado
+    if (strtolower($prestamo->estado) === 'finalizado') {
+        return redirect()->route('prestamos.index')
+            ->with('error', 'No se puede eliminar un préstamo finalizado.');
+    }
+
+    $prestamo->delete();
+
+    return redirect()->route('prestamos.index')
+        ->with('success', 'Préstamo eliminado correctamente.');
+}
+
 }

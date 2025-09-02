@@ -72,6 +72,10 @@ Route::get('/eventos-pagos', [DashboardController::class, 'eventosPagos'])
     Route::post('/simular-plan', [PagoController::class, 'simularPlan'])
     ->name('prestamos.simular');
 
+    Route::delete('/prestamos/{prestamo}', [PrestamoController::class, 'destroy'])
+    ->name('prestamos.destroy');
+
+
 
 
 
