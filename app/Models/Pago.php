@@ -27,4 +27,9 @@ class Pago extends Model
     {
         return $this->belongsTo(Prestamo::class, 'prestamo_id', 'id');
     }
+
+        public function detalles()
+    {
+        return $this->hasMany(DetallePago::class, 'id_pago', 'id_pago');
+    }
 }

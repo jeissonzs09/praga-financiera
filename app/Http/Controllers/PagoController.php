@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Pago;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\DetallePago;
+use App\Models\Recibo;
 
 class PagoController extends Controller
 {
@@ -21,12 +23,12 @@ class PagoController extends Controller
 
 public function plan($id)
 {
-    $prestamo = Prestamo::with(['cliente','pagos'])->findOrFail($id);
+    $prestamo = Prestamo::with(['cliente', 'pagos'])->findOrFail($id);
 
-    // Usamos el método centralizado
-    $cuotas = $this->generarPlan($prestamo);
+    // ✅ Usamos el plan dinámico que toma en cuenta los pagos
+    $cuotas = $this->generarPlanPagos($prestamo);
 
-    // Totales: sumamos capital, interés, total
+    // Totales
     $totales = [
         'capital' => array_sum(array_column($cuotas, 'capital')),
         'interes' => array_sum(array_column($cuotas, 'interes')),
@@ -36,6 +38,7 @@ public function plan($id)
     return view('pagos.plan', compact('prestamo', 'cuotas', 'totales'));
 }
 
+
 private function generarPlan(Prestamo $prestamo)
 {
     $frecuencia   = strtolower($prestamo->periodo);
@@ -43,25 +46,17 @@ private function generarPlan(Prestamo $prestamo)
     $capitalTotal = (float) $prestamo->valor_prestamo;
     $tasa         = (float) $prestamo->porcentaje_interes;
 
-    // Mapeo de frecuencia a pagos por mes
     $map = ['mensual' => 1, 'quincenal' => 2, 'semanal' => 4];
     $pagosPorMes = $map[$frecuencia] ?? 1;
     $numeroCuotas = $plazoMeses * $pagosPorMes;
 
-    // Cálculo consistente con el frontend
     $capitalPorCuota = round($capitalTotal / $numeroCuotas, 2);
-    $tasaPorPeriodo = ($tasa / 100) / $pagosPorMes;
-    $interesPorCuota = round($capitalTotal * $tasaPorPeriodo, 2);
-    $totalCuota = $capitalPorCuota + $interesPorCuota;
+    $interesTotal = $capitalTotal * ($tasa / 100) * $plazoMeses;
+    $interesPorCuota = round($interesTotal / $numeroCuotas, 2);
 
     $saldo  = $capitalTotal;
     $inicio = \Carbon\Carbon::parse($prestamo->created_at);
     $cuotas = [];
-
-    // Total acumulado pagado (en orden)
-    $totalPagos = $prestamo->relationLoaded('pagos') && $prestamo->pagos
-        ? $prestamo->pagos->sum('monto')
-        : 0;
 
     for ($i = 1; $i <= $numeroCuotas; $i++) {
         $vence = match($frecuencia) {
@@ -70,61 +65,16 @@ private function generarPlan(Prestamo $prestamo)
             default     => $inicio->copy()->addMonths($i)
         };
 
-        $capitalRestante = $capitalPorCuota;
-        $interesRestante = $interesPorCuota;
-
-        if ($totalPagos >= $totalCuota) {
-            // Pagada completamente
-            $estado = 'Pagada';
-            $pagado = $totalCuota;
-            $pendiente = 0;
-            $capitalRestante = 0;
-            $interesRestante = 0;
-            $totalPagos -= $totalCuota;
-        } elseif ($totalPagos > 0) {
-            // Parcial: restar primero a interés
-            $estado = 'Parcial';
-            $pagado = $totalPagos;
-
-            if ($totalPagos >= $interesRestante) {
-                // Cubrió todo el interés
-                $totalPagos -= $interesRestante;
-                $interesRestante = 0;
-
-                // Lo que sobre se descuenta del capital
-                if ($totalPagos >= $capitalRestante) {
-                    $totalPagos -= $capitalRestante;
-                    $capitalRestante = 0;
-                } else {
-                    $capitalRestante -= $totalPagos;
-                    $totalPagos = 0;
-                }
-            } else {
-                // Solo cubrió parte del interés
-                $interesRestante -= $totalPagos;
-                $totalPagos = 0;
-            }
-
-            $pendiente = $capitalRestante + $interesRestante;
-        } else {
-            // Pendiente completa
-            $estado = 'Pendiente';
-            $pagado = 0;
-            $pendiente = $totalCuota;
-        }
-
         $cuotas[] = [
-            'nro'       => $i,
-            'vence'     => $vence->format('d/m/Y'),
-            'capital'   => $capitalRestante,
-            'interes'   => $interesRestante,
-            'recargos'  => 0,
-            'mora'      => 0,
-            'total'     => $pendiente,
-            'saldo'     => $saldo,
-            'estado'    => $estado,
-            'pagado'    => $pagado,
-            'pendiente' => $pendiente,
+            'nro'      => $i,
+            'vence'    => $vence->format('d/m/Y'),
+            'capital'  => $capitalPorCuota,
+            'interes'  => $interesPorCuota,
+            'recargos' => 0,
+            'mora'     => 0,
+            'total'    => $capitalPorCuota + $interesPorCuota,
+            'estado'   => 'Pendiente', // <-- esto evita el error
+            'saldo'    => round($saldo, 2), // <-- agregado
         ];
 
         $saldo -= $capitalPorCuota;
@@ -132,6 +82,7 @@ private function generarPlan(Prestamo $prestamo)
 
     return $cuotas;
 }
+
 
 public function createPago($prestamoId)
 {
@@ -142,85 +93,133 @@ public function createPago($prestamoId)
 
 public function storePago(Request $request, $prestamoId)
 {
-    // 1️⃣ Validación del formulario
     $request->validate([
         'monto' => 'required|numeric|min:0.01',
         'observaciones' => 'nullable|string|max:255',
     ]);
 
-    // 2️⃣ Traer el préstamo con sus pagos
     $prestamo = Prestamo::with('pagos')->findOrFail($prestamoId);
     $montoRestante = $request->monto;
 
-    // 3️⃣ Datos base para calcular las cuotas originales
-    $frecuencia   = strtolower($prestamo->periodo);
-    $plazoMeses   = (int) $prestamo->plazo;
-    $capitalTotal = (float) $prestamo->valor_prestamo;
-    $tasa         = (float) $prestamo->porcentaje_interes;
+    $recibo = Recibo::create([
+        'prestamo_id'  => $prestamo->id,
+        'monto_total'  => $request->monto,
+        'observaciones'=> $request->observaciones,
+    ]);
 
-    $map = ['mensual' => 1, 'quincenal' => 2, 'semanal' => 4];
-    $numeroCuotas = $plazoMeses * ($map[$frecuencia] ?? 1);
+    $cuotas = $this->generarPlan($prestamo); // solo valores base
 
-    $capitalPorCuota = round($capitalTotal / $numeroCuotas, 2);
-    $interesTotal    = $capitalTotal * ($tasa / 100);
+    foreach ($cuotas as $cuota) {
+        $cuotaNum = $cuota['nro'];
+        $pagadoEnBD = $prestamo->pagos()->where('cuota_numero', $cuotaNum)->sum('monto');
+        $totalCuota = $cuota['capital'] + $cuota['interes'];
+        $pendienteReal = $totalCuota - $pagadoEnBD;
 
-    if ($frecuencia === 'mensual') {
-        $interesPorCuota = round($interesTotal / $numeroCuotas, 2);
-    } elseif ($frecuencia === 'quincenal') {
-        $interesPorCuota = round($interesTotal / 2, 2);
-    } else {
-        $interesPorCuota = round($interesTotal / 4, 2);
-    }
+        if ($pendienteReal <= 0) continue;
 
-    // 4️⃣ Repartir el pago en las cuotas reales según BD
-    for ($nro = 1; $nro <= $numeroCuotas; $nro++) {
+        $montoAplicar = min($montoRestante, $pendienteReal);
 
-        // Total original de esta cuota
-        $totalOriginalCuota = $capitalPorCuota + $interesPorCuota;
+        // Guardar en historial
+        Pago::create([
+            'prestamo_id'  => $prestamo->id,
+            'cuota_numero' => $cuotaNum,
+            'monto'        => $montoAplicar,
+            'observaciones'=> $request->observaciones,
+        ]);
 
-        // Pagado real en esta cuota según registros
-        $pagadoReal = $prestamo->pagos()
-            ->where('cuota_numero', $nro)
-            ->sum('monto');
-
-        // Saldo pendiente real
-        $pendienteReal = $totalOriginalCuota - $pagadoReal;
-
-        if ($pendienteReal > 0 && $montoRestante > 0) {
-
-            // Monto que se aplicará aquí
-            $montoAplicar = min($pendienteReal, $montoRestante);
-
-            // Guardar registro
-            Pago::create([
-                'prestamo_id'  => $prestamo->id,
-                'cuota_numero' => $nro,
-                'monto'        => $montoAplicar,
-                'observaciones'=> $request->observaciones,
-            ]);
-
-            $montoRestante -= $montoAplicar;
-
-            // Si ya se aplicó todo el pago, detenemos
-            if ($montoRestante <= 0) {
-                break;
-            }
+        // Detalle pago: primero interés, luego capital
+        if ($montoAplicar < $totalCuota) {
+            $interesAplicado = min($cuota['interes'], $montoAplicar);
+            $capitalAplicado = $montoAplicar - $interesAplicado;
+        } else {
+            $interesAplicado = $cuota['interes'];
+            $capitalAplicado = $cuota['capital'];
         }
+
+        DetallePago::create([
+            'id_recibo'    => $recibo->id_recibo,
+            'cuota_numero' => $cuotaNum,
+            'capital'      => round($capitalAplicado, 2),
+            'interes'      => round($interesAplicado, 2),
+            'recargo'      => 0,
+            'mora'         => 0,
+            'total'        => round($montoAplicar, 2),
+        ]);
+
+        $montoRestante -= $montoAplicar;
+
+        if ($montoRestante <= 0) break;
     }
 
-    // 5️⃣ Verificar si el préstamo ya está liquidado
+    // Verificar si préstamo liquidado
     $totalPagado = $prestamo->pagos()->sum('monto');
-    $totalOriginal = $capitalTotal + $interesTotal;
+    $totalOriginal = array_sum(array_column($cuotas, 'capital')) +
+                     array_sum(array_column($cuotas, 'interes'));
 
     if ($totalPagado >= $totalOriginal) {
         $prestamo->estado = 'Finalizado';
         $prestamo->save();
     }
 
-    // 6️⃣ Redirigir al historial
     return redirect()->route('pagos.plan', $prestamo->id)
         ->with('success', 'Pago registrado y aplicado correctamente.');
 }
+
+// Controlador para mostrar plan
+public function mostrarPlan($prestamoId)
+{
+    $prestamo = Prestamo::with('pagos')->findOrFail($prestamoId);
+    $cuotas = $this->generarPlanPagos($prestamo); // <-- aquí siempre se actualiza con los pagos reales
+
+    return view('pagos.plan', compact('prestamo', 'cuotas'));
+}
+
+private function generarPlanPagos(Prestamo $prestamo)
+{
+    $cuotasBase = $this->generarPlan($prestamo); // solo datos base
+    $cuotas = [];
+    $saldo = $prestamo->valor_prestamo;
+
+    foreach ($cuotasBase as $cuota) {
+        $cuotaNum = $cuota['nro'];
+
+        // Total pagado en BD para esta cuota
+        $pagado = $prestamo->pagos()->where('cuota_numero', $cuotaNum)->sum('monto');
+
+        // Interés primero
+        $interesRestante = max($cuota['interes'] - $pagado, 0);
+        $capitalRestante = max($cuota['capital'] - max($pagado - $cuota['interes'], 0), 0);
+        $totalRestante = $interesRestante + $capitalRestante;
+
+        // Estado según pagos y fecha
+        if ($totalRestante == 0) {
+            $estado = 'Pagada';    // verde
+        } elseif ($pagado > 0) {
+            $estado = 'Parcial';   // amarillo
+        } elseif (\Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($cuota['vence']))) {
+            $estado = 'Vencida';   // rojo
+        } else {
+            $estado = 'Pendiente';
+        }
+
+        $cuotas[] = [
+            'nro'       => $cuotaNum,
+            'vence'     => $cuota['vence'],
+            'capital'   => round($capitalRestante, 2),
+            'interes'   => round($interesRestante, 2),
+            'recargos'  => 0,
+            'mora'      => 0,
+            'total'     => round($totalRestante, 2),
+            'saldo'     => round($saldo, 2),
+            'estado'    => $estado,
+        ];
+
+        $saldo -= $capitalRestante;
+    }
+
+    return $cuotas;
+}
+
 
 public function historial($prestamoId)
 {

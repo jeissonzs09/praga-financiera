@@ -7,6 +7,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\PrestamoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReciboController;
 
 
 Route::get('/', function () {
@@ -74,6 +75,12 @@ Route::get('/eventos-pagos', [DashboardController::class, 'eventosPagos'])
 
     Route::delete('/prestamos/{prestamo}', [PrestamoController::class, 'destroy'])
     ->name('prestamos.destroy');
+
+    Route::get('/prestamos/{prestamo}/recibos', [ReciboController::class, 'index'])->name('recibos.index');
+Route::get('/recibos/{recibo}', [ReciboController::class, 'show'])->name('recibos.show');
+
+Route::get('/recibos/{recibo}/pdf', [ReciboController::class, 'pdf'])->name('recibos.pdf');
+
 
 
 
