@@ -8,6 +8,7 @@ use App\Http\Controllers\PrestamoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReciboController;
+use App\Http\Controllers\ContratoController;
 
 
 Route::get('/', function () {
@@ -87,6 +88,12 @@ Route::delete('/pagos/{pago}', [PagoController::class, 'eliminarPago'])->name('p
 Route::delete('/recibos/{recibo}', [PagoController::class, 'eliminarRecibo'])->name('pagos.eliminarRecibo');
 
 Route::get('prestamos/{id}/plan-original/pdf', [PagoController::class, 'pdfPlanOriginal'])->name('pagos.plan.original.pdf');
+
+// Listado de contratos
+Route::get('/contratos', [ContratoController::class, 'index'])->name('contratos.index');
+
+// Generar PDF de contrato
+Route::get('/contratos/{prestamo}/pdf', [ContratoController::class, 'generarPdf'])->name('contratos.pdf');
 
 
 

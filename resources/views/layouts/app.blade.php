@@ -191,6 +191,13 @@
         <span>Préstamos</span>
     </a>
 
+    <a href="{{ route('contratos.index') }}" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-green-100 rounded transition">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M4 4h16v2H4V4zm0 4h16v2H4V8zm0 4h10v2H4v-2zm0 4h10v2H4v-2z"/>
+    </svg>
+    <span>Contratos</span>
+</a>
+
     <a href="{{ route('pagos.index') }}" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 hover:text-indigo-600 rounded transition">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
             <path d="M20 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H4V8h16v8zm-9-6h2v4h-2v-4zm0 6h2v2h-2v-2z"/>
