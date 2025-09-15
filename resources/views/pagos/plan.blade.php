@@ -29,6 +29,10 @@
         </button>
     @endif
 
+    <a href="{{ route('pagos.listar', $prestamo->id) }}" class="btn btn-danger">
+    Eliminar Pago
+</a>
+
     <a href="{{ route('pagos.historial', $prestamo->id) }}"
        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow">
         Ver registro de pagos
@@ -64,12 +68,13 @@
             @class([
                 'bg-green-100 text-green-800' => $cuota['estado'] === 'Pagada',
                 'bg-yellow-100 text-yellow-800' => $cuota['estado'] === 'Parcial',
-                'bg-red-100 text-red-800' => $cuota['estado'] === 'Pendiente' && \Carbon\Carbon::createFromFormat('d/m/Y', $cuota['vence'])->isPast(),
+                'bg-red-100 text-red-800' => $cuota['estado'] === 'Pendiente' && \Carbon\Carbon::createFromFormat('Y-m-d', $cuota['vence'])->isPast(),
+
     ])
             ])
         >
             <td class="px-4 py-2 text-center">{{ $cuota['nro'] }}</td>
-            <td class="px-4 py-2 text-center">{{ $cuota['vence'] }}</td>
+            <td class="px-4 py-2 text-center">{{ \Carbon\Carbon::createFromFormat('Y-m-d', $cuota['vence'])->format('d/m/Y') }}</td>
             <td class="px-4 py-2 text-right">
                 L. {{ $cuota['estado'] === 'Pagada' ? '0.00' : number_format($cuota['capital'], 2) }}
             </td>

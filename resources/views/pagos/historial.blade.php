@@ -28,7 +28,6 @@
                     <th class="px-3 py-2 border">Cuota</th>
                     <th class="px-3 py-2 border text-right">Monto</th>
                     <th class="px-3 py-2 border">Observaciones</th>
-                    <th class="px-3 py-2 border text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -38,16 +37,6 @@
                         <td class="px-3 py-2 border text-center">{{ $pago->cuota_numero ?? '-' }}</td>
                         <td class="px-3 py-2 border text-right">L. {{ number_format($pago->monto, 2) }}</td>
                         <td class="px-3 py-2 border">{{ $pago->observaciones }}</td>
-                        <td class="px-3 py-2 border text-center">
-                            @if(!empty($pago->id_pago))
-                                <a href="{{ route('pagos.recibo', ['pago' => $pago->id_pago]) }}"
-                                   class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded shadow text-sm"
-                                   target="_blank">
-                                    Generar recibo
-                                </a>
-                            @else
-                                —
-                            @endif
                         </td>
                     </tr>
                 @empty

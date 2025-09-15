@@ -67,14 +67,15 @@ private function generarPlan(Prestamo $prestamo)
 
         $cuotas[] = [
             'nro'      => $i,
-            'vence'    => $vence->format('d/m/Y'),
+            // 👇 Guardamos en formato ISO (seguro para Carbon y MySQL)
+            'vence'    => $vence->format('Y-m-d'),
             'capital'  => $capitalPorCuota,
             'interes'  => $interesPorCuota,
             'recargos' => 0,
             'mora'     => 0,
             'total'    => $capitalPorCuota + $interesPorCuota,
-            'estado'   => 'Pendiente', // <-- esto evita el error
-            'saldo'    => round($saldo, 2), // <-- agregado
+            'estado'   => 'Pendiente',
+            'saldo'    => round($saldo, 2),
         ];
 
         $saldo -= $capitalPorCuota;
@@ -82,6 +83,7 @@ private function generarPlan(Prestamo $prestamo)
 
     return $cuotas;
 }
+
 
 
 public function createPago($prestamoId)
@@ -176,34 +178,32 @@ public function mostrarPlan($prestamoId)
 
 private function generarPlanPagos(Prestamo $prestamo)
 {
-    $cuotasBase = $this->generarPlan($prestamo); // solo datos base
+    $cuotasBase = $this->generarPlan($prestamo);
     $cuotas = [];
     $saldo = $prestamo->valor_prestamo;
 
     foreach ($cuotasBase as $cuota) {
         $cuotaNum = $cuota['nro'];
 
-        // Total pagado en BD para esta cuota
         $pagado = $prestamo->pagos()->where('cuota_numero', $cuotaNum)->sum('monto');
 
-        // Interés primero
         $interesRestante = max($cuota['interes'] - $pagado, 0);
         $capitalRestante = max($cuota['capital'] - max($pagado - $cuota['interes'], 0), 0);
         $totalRestante = $interesRestante + $capitalRestante;
 
-        // Estado según pagos y fecha
         if ($totalRestante == 0) {
-            $estado = 'Pagada';    // verde
+            $estado = 'Pagada';
         } elseif ($pagado > 0) {
-            $estado = 'Parcial';   // amarillo
+            $estado = 'Parcial';
         } elseif (\Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($cuota['vence']))) {
-            $estado = 'Vencida';   // rojo
+            $estado = 'Vencida';
         } else {
             $estado = 'Pendiente';
         }
 
         $cuotas[] = [
             'nro'       => $cuotaNum,
+            // sigue en ISO
             'vence'     => $cuota['vence'],
             'capital'   => round($capitalRestante, 2),
             'interes'   => round($interesRestante, 2),
@@ -416,6 +416,7 @@ private function numeroALetras($numero)
 public function simularPlan(Request $request)
 {
     try {
+        // Creamos un objeto Prestamo temporal para la simulación
         $prestamo = new \App\Models\Prestamo([
             'valor_prestamo'     => $request->valor_prestamo,
             'porcentaje_interes' => $request->porcentaje_interes,
@@ -427,9 +428,16 @@ public function simularPlan(Request $request)
         // En simulación no hay pagos, así que forzamos una colección vacía
         $prestamo->setRelation('pagos', collect());
 
+        // Generamos el plan
         $cuotas = $this->generarPlan($prestamo);
 
+        // Aseguramos que las fechas estén en formato 'd/m/Y' para Blade
+        foreach ($cuotas as &$cuota) {
+            $cuota['vence'] = \Carbon\Carbon::parse($cuota['vence'])->format('d/m/Y');
+        }
+
         return response()->json($cuotas);
+
     } catch (\Throwable $e) {
         return response()->json([
             'error'   => 'Error interno',
@@ -438,6 +446,51 @@ public function simularPlan(Request $request)
             'archivo' => $e->getFile()
         ], 500);
     }
+}
+
+public function listarPagos(Prestamo $prestamo)
+{
+    // Traer recibos con su total y fecha
+    $recibos = Recibo::where('prestamo_id', $prestamo->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    return view('pagos.listar', compact('prestamo', 'recibos'));
+}
+
+
+public function eliminarPago(Pago $pago)
+{
+    // Si quieres, aquí puedes eliminar también el detalle del recibo
+    DetallePago::where('id_recibo', $pago->id_recibo)
+        ->where('cuota_numero', $pago->cuota_numero)
+        ->delete();
+
+    $pago->delete();
+
+    return back()->with('success', 'Pago eliminado correctamente.');
+}
+
+public function eliminarRecibo($idRecibo)
+{
+    // 1️⃣ Buscar el recibo
+    $recibo = Recibo::findOrFail($idRecibo);
+
+    // 2️⃣ Obtener las cuotas afectadas por ese recibo
+    $cuotas = DetallePago::where('id_recibo', $idRecibo)->pluck('cuota_numero');
+
+    // 3️⃣ Eliminar los pagos por cuota que correspondan a esas cuotas
+    Pago::where('prestamo_id', $recibo->prestamo_id)
+        ->whereIn('cuota_numero', $cuotas)
+        ->delete();
+
+    // 4️⃣ Eliminar los detalles del recibo
+    DetallePago::where('id_recibo', $idRecibo)->delete();
+
+    // 5️⃣ Eliminar el recibo en sí
+    $recibo->delete();
+
+    return back()->with('success', 'Pago eliminado correctamente y plan restaurado.');
 }
 
 }

@@ -72,4 +72,11 @@ class Cliente extends Model
     {
         return $this->hasMany(Prestamo::class, 'cliente_id', 'id_cliente');
     }
+
+    // App\Models\Cliente.php
+public function referencias()
+{
+    return $this->hasMany(Referencia::class, 'cliente_id', 'id_cliente');
+}
+
 }

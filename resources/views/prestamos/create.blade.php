@@ -188,7 +188,7 @@ function mostrarTablaCuotas(cuotas) {
                 <td class="px-2 py-1">${c.vence}</td>
                 <td class="px-2 py-1">L. ${c.capital.toFixed(2)}</td>
                 <td class="px-2 py-1">L. ${c.interes.toFixed(2)}</td>
-                <td class="px-2 py-1 font-bold">L. ${c.pendiente.toFixed(2)}</td>
+                <td class="px-2 py-1 font-bold">L. ${c.total.toFixed(2)}</td>
                 <td class="px-2 py-1">${c.estado}</td>
             </tr>
         `;

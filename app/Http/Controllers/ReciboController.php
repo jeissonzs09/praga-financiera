@@ -192,28 +192,20 @@ public function pdf($idRecibo)
         ->first();
 
     if ($reciboAnterior) {
-        // Si existe, usamos su saldo actual
         $saldoAnterior = $reciboAnterior->saldo_actual;
     } else {
-        // Si es el primer recibo, usamos el total del plan (capital + intereses)
         $planOriginal = $this->generarPlanOriginal($recibo->prestamo);
-        $saldoAnterior = array_sum(array_column($planOriginal, 'total')); // Ej: 35,000
+        $saldoAnterior = array_sum(array_column($planOriginal, 'total'));
     }
 
-    // Lo que abona este recibo (capital + intereses en monto_total)
     $capitalAbonado = $recibo->monto_total;
-
-    // Calcular nuevo saldo
     $saldoActual = $saldoAnterior - $capitalAbonado;
 
-    // Guardar saldo en el recibo
     $recibo->saldo_actual = $saldoActual;
     $recibo->save();
 
-    // Convertir a letras
     $montoLetras = $this->montoEnLetras($recibo->monto_total);
 
-    // Generar PDF
     $pdf = Pdf::loadView('recibos.pdf', [
         'recibo'           => $recibo,
         'saldoAnterior'    => $saldoAnterior,
@@ -225,7 +217,22 @@ public function pdf($idRecibo)
         'fechaLimite'      => '31/12/2050'
     ])->setPaper('letter', 'portrait');
 
-    return $pdf->download('Recibo_' . $recibo->id_recibo . '.pdf');
+    // Código de préstamo con ceros
+    $codigoPrestamo = 'PRG-' . str_pad($recibo->prestamo->id, 6, '0', STR_PAD_LEFT);
+
+    // Nombre del cliente limpio
+    $nombreCliente = preg_replace('/[^A-Za-z0-9]/', '', $recibo->prestamo->cliente->nombre_completo);
+
+    // Fecha del recibo en formato YYYYMMDD para identificar pago
+    $fechaRecibo = $recibo->created_at->format('Ymd');
+
+    // Número de recibo con ceros
+    $numeroRecibo = str_pad($recibo->id_recibo, 6, '0', STR_PAD_LEFT);
+
+    // Nombre final del archivo
+    $nombreArchivo = "Prestamo_{$codigoPrestamo}_{$nombreCliente}_{$fechaRecibo}_Recibo{$numeroRecibo}.pdf";
+
+    return $pdf->download($nombreArchivo);
 }
 
 /**

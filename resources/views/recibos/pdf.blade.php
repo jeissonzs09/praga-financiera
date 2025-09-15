@@ -46,7 +46,7 @@
                 <td><strong>Fecha:</strong> {{ $recibo->created_at->format('d/m/Y') }}</td>
             </tr>
             <tr>
-                <td><strong>Préstamo:</strong> {{ $recibo->prestamo->codigo ?? $recibo->prestamo->id }}</td>
+                <td><strong>Préstamo:</strong> {{ 'PRG-' . str_pad($recibo->prestamo->id, 6, '0', STR_PAD_LEFT) }}</td>
                 <td><strong>Forma de pago:</strong> {{ $recibo->forma_pago ?? 'Efectivo' }}</td>
             </tr>
         </table>

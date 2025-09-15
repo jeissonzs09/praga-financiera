@@ -81,9 +81,10 @@ Route::get('/recibos/{recibo}', [ReciboController::class, 'show'])->name('recibo
 
 Route::get('/recibos/{recibo}/pdf', [ReciboController::class, 'pdf'])->name('recibos.pdf');
 
-
-
-
+// web.php
+Route::get('/prestamos/{prestamo}/pagos', [PagoController::class, 'listarPagos'])->name('pagos.listar');
+Route::delete('/pagos/{pago}', [PagoController::class, 'eliminarPago'])->name('pagos.eliminar');
+Route::delete('/recibos/{recibo}', [PagoController::class, 'eliminarRecibo'])->name('pagos.eliminarRecibo');
 
 
 
