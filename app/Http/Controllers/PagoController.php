@@ -12,14 +12,21 @@ use App\Models\Recibo;
 
 class PagoController extends Controller
 {
-    public function index()
-    {
-        $prestamos = Prestamo::with(['pagos'])
-            ->where('estado', 'Activo')
-            ->get();
+public function index(Request $request)
+{
+    $prestamos = Prestamo::with(['pagos', 'cliente']) // 👈 importante para buscar por cliente
+        ->where('estado', 'Activo')
+        ->when($request->filled('buscar'), function ($query) use ($request) {
+            $query->whereHas('cliente', function ($q) use ($request) {
+                $q->where('nombre_completo', 'like', '%' . $request->buscar . '%');
+            });
+        })
+        ->latest() // 👈 ordena por fecha de creación, más nuevos primero
+        ->paginate(10); // 👈 solo 10 por página
 
-        return view('pagos.index', compact('prestamos'));
-    }
+    return view('pagos.index', compact('prestamos'));
+}
+
 
 public function plan($id)
 {
@@ -55,7 +62,7 @@ private function generarPlan(Prestamo $prestamo)
     $interesPorCuota = round($interesTotal / $numeroCuotas, 2);
 
     $saldo  = $capitalTotal;
-    $inicio = \Carbon\Carbon::parse($prestamo->created_at);
+    $inicio = \Carbon\Carbon::parse($prestamo->fecha_inicio);
     $cuotas = [];
 
     for ($i = 1; $i <= $numeroCuotas; $i++) {
@@ -65,24 +72,45 @@ private function generarPlan(Prestamo $prestamo)
             default     => $inicio->copy()->addMonths($i)
         };
 
-        $cuotas[] = [
-            'nro'      => $i,
-            // 👇 Guardamos en formato ISO (seguro para Carbon y MySQL)
-            'vence'    => $vence->format('Y-m-d'),
-            'capital'  => $capitalPorCuota,
-            'interes'  => $interesPorCuota,
-            'recargos' => 0,
-            'mora'     => 0,
-            'total'    => $capitalPorCuota + $interesPorCuota,
-            'estado'   => 'Pendiente',
-            'saldo'    => round($saldo, 2),
+        $saldo -= $capitalPorCuota;
+
+        $cuota = [
+            'nro'       => $i,
+            'vence'     => $vence->format('Y-m-d'),
+            'capital'   => $capitalPorCuota,
+            'interes'   => $interesPorCuota,
+            'recargos'  => 0,
+            'mora'      => 0,
+            'total'     => $capitalPorCuota + $interesPorCuota,
+            'estado'    => 'Pendiente',
+            'saldo'     => round($saldo, 2),
+            'es_tardio' => false // siempre booleano
         ];
 
-        $saldo -= $capitalPorCuota;
+        // 🔹 Solo si es un préstamo real, buscar pago y marcar tardío
+        if ($prestamo->exists) {
+            $pago = \App\Models\Pago::where('prestamo_id', $prestamo->id)
+                ->where('cuota_numero', $i)
+                ->first();
+
+            if ($pago) {
+                $cuota['estado'] = 'Pagada';
+
+                // Comparación segura de fechas
+                $venceDate = \Carbon\Carbon::createFromFormat('Y-m-d', $cuota['vence']);
+                $fechaPago = \Carbon\Carbon::parse($pago->created_at);
+
+                // Si el pago fue después de la fecha de vencimiento → tardío
+                $cuota['es_tardio'] = $fechaPago->gt($venceDate);
+            }
+        }
+
+        $cuotas[] = $cuota;
     }
 
     return $cuotas;
 }
+
 
 
 
@@ -185,12 +213,18 @@ private function generarPlanPagos(Prestamo $prestamo)
     foreach ($cuotasBase as $cuota) {
         $cuotaNum = $cuota['nro'];
 
-        $pagado = $prestamo->pagos()->where('cuota_numero', $cuotaNum)->sum('monto');
+        // Obtener todos los pagos registrados para esta cuota
+        $pagos = $prestamo->pagos()->where('cuota_numero', $cuotaNum)->orderBy('created_at')->get();
+        $pagado = $pagos->sum('monto');
+        $fechaPago = optional($pagos->first())->created_at;
 
-        $interesRestante = max($cuota['interes'] - $pagado, 0);
-        $capitalRestante = max($cuota['capital'] - max($pagado - $cuota['interes'], 0), 0);
-        $totalRestante = $interesRestante + $capitalRestante;
+        // Cálculo de capital pagado e interés restante
+        $capitalPagado     = max($pagado - $cuota['interes'], 0);
+        $interesRestante   = max($cuota['interes'] - $pagado, 0);
+        $capitalRestante   = max($cuota['capital'] - $capitalPagado, 0);
+        $totalRestante     = $interesRestante + $capitalRestante;
 
+        // Estado de la cuota
         if ($totalRestante == 0) {
             $estado = 'Pagada';
         } elseif ($pagado > 0) {
@@ -201,20 +235,26 @@ private function generarPlanPagos(Prestamo $prestamo)
             $estado = 'Pendiente';
         }
 
+        // Evaluar si el pago fue tardío
+        $vence = \Carbon\Carbon::parse($cuota['vence']);
+        $esTardio = $fechaPago && \Carbon\Carbon::parse($fechaPago)->gt($vence);
+
+        // Guardar la cuota con el saldo actual (antes de aplicar el capital)
         $cuotas[] = [
-            'nro'       => $cuotaNum,
-            // sigue en ISO
-            'vence'     => $cuota['vence'],
-            'capital'   => round($capitalRestante, 2),
-            'interes'   => round($interesRestante, 2),
-            'recargos'  => 0,
-            'mora'      => 0,
-            'total'     => round($totalRestante, 2),
-            'saldo'     => round($saldo, 2),
-            'estado'    => $estado,
+            'nro'        => $cuotaNum,
+            'vence'      => $cuota['vence'],
+            'capital'    => round($capitalRestante, 2),
+            'interes'    => round($interesRestante, 2),
+            'recargos'   => 0,
+            'mora'       => 0,
+            'total'      => round($totalRestante, 2),
+            'saldo'      => round($saldo, 2),
+            'estado'     => $estado,
+            'es_tardio'  => $esTardio,
         ];
 
-        $saldo -= $capitalRestante;
+        // Aplicar el capital pagado para la siguiente cuota
+        $saldo -= $capitalPagado;
     }
 
     return $cuotas;
@@ -238,21 +278,15 @@ private function generarPlanOriginal(Prestamo $prestamo)
     $tasa         = (float) $prestamo->porcentaje_interes;
 
     $map = ['mensual' => 1, 'quincenal' => 2, 'semanal' => 4];
-    $numeroCuotas = $plazoMeses * ($map[$frecuencia] ?? 1);
+    $pagosPorMes = $map[$frecuencia] ?? 1;
+    $numeroCuotas = $plazoMeses * $pagosPorMes;
 
     $capitalPorCuota = round($capitalTotal / $numeroCuotas, 2);
-    $interesTotal    = $capitalTotal * ($tasa / 100);
-
-    if ($frecuencia === 'mensual') {
-        $interesPorCuota = round($interesTotal / $numeroCuotas, 2);
-    } elseif ($frecuencia === 'quincenal') {
-        $interesPorCuota = round($interesTotal / 2, 2);
-    } else {
-        $interesPorCuota = round($interesTotal / 4, 2);
-    }
+    $interesTotal    = $capitalTotal * ($tasa / 100) * $plazoMeses;
+    $interesPorCuota = round($interesTotal / $numeroCuotas, 2);
 
     $saldo  = $capitalTotal;
-    $inicio = \Carbon\Carbon::parse($prestamo->created_at);
+    $inicio = \Carbon\Carbon::parse($prestamo->fecha_inicio);
     $cuotas = [];
 
     for ($i = 1; $i <= $numeroCuotas; $i++) {
@@ -262,8 +296,7 @@ private function generarPlanOriginal(Prestamo $prestamo)
             default     => $inicio->copy()->addMonths($i)
         };
 
-        $totalCuota = $capitalPorCuota + $interesPorCuota;
-
+        // 👇 Guardamos el saldo ANTES de aplicar el capital
         $cuotas[] = [
             'nro'       => $i,
             'vence'     => $vence->format('d/m/Y'),
@@ -271,16 +304,20 @@ private function generarPlanOriginal(Prestamo $prestamo)
             'interes'   => $interesPorCuota,
             'recargos'  => 0,
             'mora'      => 0,
-            'total'     => $totalCuota,
-            'saldo'     => $saldo,
+            'total'     => $capitalPorCuota + $interesPorCuota,
+            'saldo'     => round($saldo, 2),
             'estado'    => 'Pendiente'
         ];
 
+        // 👇 Luego descontamos el capital para la siguiente cuota
         $saldo -= $capitalPorCuota;
     }
 
     return $cuotas;
 }
+
+
+
 
 public function planOriginal($id)
 {
@@ -422,7 +459,8 @@ public function simularPlan(Request $request)
             'porcentaje_interes' => $request->porcentaje_interes,
             'plazo'              => $request->plazo,
             'periodo'            => $request->periodo,
-            'created_at'         => now()
+            'fecha_inicio' => $request->fecha_inicio, // ✅ ahora coincide con el name del input
+
         ]);
 
         // En simulación no hay pagos, así que forzamos una colección vacía
@@ -447,6 +485,7 @@ public function simularPlan(Request $request)
         ], 500);
     }
 }
+
 
 public function listarPagos(Prestamo $prestamo)
 {
@@ -492,5 +531,22 @@ public function eliminarRecibo($idRecibo)
 
     return back()->with('success', 'Pago eliminado correctamente y plan restaurado.');
 }
+
+public function pdfPlanOriginal($prestamoId)
+{
+    $prestamo = Prestamo::with('cliente')->findOrFail($prestamoId);
+    $cuotas = $this->generarPlanOriginal($prestamo);
+
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pagos.plan_original_pdf', [
+        'prestamo' => $prestamo,
+        'cuotas'   => $cuotas,
+    ])->setPaper('letter', 'portrait');
+
+    $nombreCliente = preg_replace('/[^A-Za-z0-9]/', '_', $prestamo->cliente->nombre_completo);
+$nombreArchivo = 'Plan_de_pago_' . $nombreCliente . '.pdf';
+
+    return $pdf->download($nombreArchivo);
+}
+
 
 }

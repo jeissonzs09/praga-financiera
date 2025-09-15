@@ -18,6 +18,7 @@ class Prestamo extends Model
     'valor_prestamo',
     'periodo',
     'estado',
+    'fecha_inicio',
 ];
 
 
@@ -30,6 +31,11 @@ class Prestamo extends Model
 public function pagos()
 {
     return $this->hasMany(Pago::class, 'prestamo_id', 'id');
+}
+
+public function recibos()
+{
+    return $this->hasMany(Recibo::class, 'prestamo_id');
 }
 
 }

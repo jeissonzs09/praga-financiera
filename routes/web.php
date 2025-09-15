@@ -86,6 +86,8 @@ Route::get('/prestamos/{prestamo}/pagos', [PagoController::class, 'listarPagos']
 Route::delete('/pagos/{pago}', [PagoController::class, 'eliminarPago'])->name('pagos.eliminar');
 Route::delete('/recibos/{recibo}', [PagoController::class, 'eliminarRecibo'])->name('pagos.eliminarRecibo');
 
+Route::get('prestamos/{id}/plan-original/pdf', [PagoController::class, 'pdfPlanOriginal'])->name('pagos.plan.original.pdf');
+
 
 
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.

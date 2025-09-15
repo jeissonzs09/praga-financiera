@@ -191,12 +191,20 @@ public function pdf($idRecibo)
         ->orderBy('id_recibo', 'desc')
         ->first();
 
-    if ($reciboAnterior) {
-        $saldoAnterior = $reciboAnterior->saldo_actual;
-    } else {
-        $planOriginal = $this->generarPlanOriginal($recibo->prestamo);
-        $saldoAnterior = array_sum(array_column($planOriginal, 'total'));
-    }
+    $capitalTotal = $recibo->prestamo->valor_prestamo;
+$interesTotal = $capitalTotal * ($recibo->prestamo->porcentaje_interes / 100) * $recibo->prestamo->plazo;
+$deudaTotal   = $capitalTotal + $interesTotal;
+
+if ($reciboAnterior) {
+    $pagosPrevios = $recibo->prestamo->recibos()
+        ->where('id_recibo', '<', $recibo->id_recibo)
+        ->sum('monto_total');
+
+    $saldoAnterior = $deudaTotal - $pagosPrevios;
+} else {
+    $saldoAnterior = $deudaTotal;
+}
+
 
     $capitalAbonado = $recibo->monto_total;
     $saldoActual = $saldoAnterior - $capitalAbonado;

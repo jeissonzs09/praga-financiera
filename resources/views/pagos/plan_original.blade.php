@@ -23,6 +23,12 @@
    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
     ← Volver al plan actual
 </a>
+
+<a href="{{ route('pagos.plan.original.pdf', $prestamo->id) }}"
+   class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
+    🖨️ Exportar plan a PDF
+</a>
+
 </div>
 
     
@@ -44,14 +50,7 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
     @foreach($cuotas as $cuota)
-        <tr
-            @class([
-                'bg-green-100 text-green-800' => $cuota['estado'] === 'Pagada',
-                'bg-yellow-100 text-yellow-800' => $cuota['estado'] === 'Parcial',
-                'bg-red-100 text-red-800' => $cuota['estado'] === 'Pendiente' && \Carbon\Carbon::createFromFormat('d/m/Y', $cuota['vence'])->isPast(),
-    ])
-            ])
-        >
+        <tr>
             <td class="px-4 py-2 text-center">{{ $cuota['nro'] }}</td>
             <td class="px-4 py-2 text-center">{{ $cuota['vence'] }}</td>
             <td class="px-4 py-2 text-right">

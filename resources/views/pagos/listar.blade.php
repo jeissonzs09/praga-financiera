@@ -1,44 +1,65 @@
 @extends('layouts.app')
 
 @section('content')
-<h1>Pagos del préstamo de {{ $prestamo->cliente->nombre_completo }}</h1>
+<div class="p-4">
 
-<div class="overflow-x-auto bg-white rounded-lg shadow">
-    <table class="min-w-full text-sm text-gray-800">
-        <thead class="bg-blue-900 text-white text-sm uppercase">
-            <tr>
-                <th class="px-4 py-3 text-left">Fecha</th>
-                <th class="px-4 py-3 text-left">Monto total</th>
-                <th class="px-4 py-3 text-left">Observaciones</th>
-                <th class="px-4 py-3 text-center">Acciones</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-            @forelse($recibos as $recibo)
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-4 py-2">{{ $recibo->created_at->format('d/m/Y H:i') }}</td>
-                    <td class="px-4 py-2">L. {{ number_format($recibo->monto_total, 2) }}</td>
-                    <td class="px-4 py-2">{{ $recibo->observaciones ?: '—' }}</td>
-                    <td class="px-4 py-2 text-center">
-                        <form action="{{ route('pagos.eliminarRecibo', $recibo->id_recibo) }}" method="POST" class="inline-block eliminar-form">
-    @csrf
-    @method('DELETE')
-    <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
-</form>
+    <!-- Encabezado resaltado -->
+    <div class="bg-blue-900 text-white rounded-lg shadow p-4 mb-6 text-center">
+        <h1 class="text-2xl font-bold tracking-wide">
+            Pagos registrados para el préstamo de {{ $prestamo->cliente->nombre_completo }}
+        </h1>
+        <p class="mt-1 text-sm">Préstamo N° {{ $prestamo->id }} — Monto: L. {{ number_format($prestamo->valor_prestamo, 2) }}</p>
+    </div>
 
-                    </td>
-                </tr>
-            @empty
+    <!-- Botón para regresar al plan de pago -->
+    <div class="mb-4 flex justify-end">
+        <a href="{{ route('pagos.plan', $prestamo->id) }}"
+           class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded shadow">
+            ← Regresar al plan de pago
+        </a>
+    </div>
+
+    <!-- Tabla de pagos -->
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="min-w-full text-sm text-gray-800">
+            <thead class="bg-blue-900 text-white text-sm uppercase">
                 <tr>
-                    <td colspan="4" class="px-4 py-4 text-center text-gray-500 italic">
-                        No hay pagos registrados para este préstamo.
-                    </td>
+                    <th class="px-4 py-3 text-left">Fecha</th>
+                    <th class="px-4 py-3 text-left">Monto total</th>
+                    <th class="px-4 py-3 text-left">Observaciones</th>
+                    <th class="px-4 py-3 text-center">Acciones</th>
                 </tr>
-            @endforelse
-        </tbody>
-    </table>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                @forelse($recibos as $recibo)
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-2">{{ $recibo->created_at->format('d/m/Y H:i') }}</td>
+                        <td class="px-4 py-2">L. {{ number_format($recibo->monto_total, 2) }}</td>
+                        <td class="px-4 py-2">{{ $recibo->observaciones ?: '—' }}</td>
+                        <td class="px-4 py-2 text-center">
+                            <form action="{{ route('pagos.eliminarRecibo', $recibo->id_recibo) }}" method="POST" class="inline-block eliminar-form">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow text-sm">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="px-4 py-4 text-center text-gray-500 italic">
+                            No hay pagos registrados para este préstamo.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
 </div>
 
+<!-- Confirmación visual al eliminar -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.eliminar-form').forEach(form => {

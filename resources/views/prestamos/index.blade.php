@@ -14,7 +14,7 @@
         </a>
     </div>
 
-    <form method="GET" action="{{ route('prestamos.index') }}" class="mb-4 flex flex-wrap gap-2 items-center">
+<form method="GET" action="{{ route('prestamos.index') }}" class="mb-4 flex flex-wrap gap-2 items-center">
     <input type="text" name="buscar" value="{{ request('buscar') }}"
            placeholder="Buscar por cliente"
            class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
@@ -25,12 +25,20 @@
         <option value="Finalizado" {{ request('estado') === 'Finalizado' ? 'selected' : '' }}>Finalizado</option>
     </select>
 
+    {{-- 🔹 Nuevo campo para filtrar por fecha --}}
+    <input type="date" name="fecha" value="{{ request('fecha') }}"
+           class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+
     <button type="submit"
             class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
         Filtrar
     </button>
 </form>
 
+
+<div class="flex justify-end mb-2">
+    {{ $prestamos->links() }}
+</div>
 
     <div class="overflow-x-auto bg-white rounded-lg shadow">
         
@@ -59,7 +67,7 @@
                         <td class="px-4 py-2">{{ $prestamo->porcentaje_interes }}%</td>
                         <td class="px-4 py-2">{{ $prestamo->plazo }} meses</td>
                         <td class="px-4 py-2">{{ $prestamo->periodo }}</td>
-                        <td class="px-4 py-2">{{ $prestamo->created_at->format('d/m/Y') }}</td>
+                        <td class="px-4 py-2">{{ $prestamo->fecha_inicio}}</td>
                         <td class="px-4 py-2">
                             @if(strtolower($prestamo->estado) === 'activo')
                                 <span class="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-800">

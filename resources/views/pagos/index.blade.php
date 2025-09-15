@@ -7,6 +7,24 @@
 @section('content')
 <div class="p-4">
 
+<div class="flex justify-between items-center mb-3">
+    <!-- Buscador -->
+    <form method="GET" action="{{ route('pagos.index') }}" class="flex gap-2">
+        <input type="text" name="buscar" value="{{ request('buscar') }}"
+               placeholder="Buscar cliente..."
+               class="border rounded px-3 py-1">
+        <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">
+            Buscar
+        </button>
+    </form>
+
+    <!-- Paginación -->
+    <div>
+        {{ $prestamos->appends(request()->query())->links() }}
+    </div>
+</div>
+
+
     <div class="overflow-x-auto bg-white rounded-lg shadow">
         <table class="min-w-full text-sm text-gray-800">
             <thead class="bg-blue-900 text-white text-sm uppercase">

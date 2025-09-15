@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class PrestamoController extends Controller
 {
     // Listado de préstamos activos
-    public function index(Request $request)
+public function index(Request $request)
 {
     $query = Prestamo::with('cliente')->latest();
 
@@ -25,10 +25,16 @@ class PrestamoController extends Controller
         $query->where('estado', $request->estado);
     }
 
-    $prestamos = $query->get();
+    // 📌 Filtro por fecha exacta
+    if ($request->filled('fecha')) {
+        $query->whereDate('fecha_inicio', $request->fecha);
+    }
+
+    $prestamos = $query->paginate(10);
 
     return view('prestamos.index', compact('prestamos'));
 }
+
 
     // Formulario para crear un préstamo
     public function create()
@@ -47,7 +53,8 @@ public function store(Request $request)
         'porcentaje_interes' => 'required|numeric|min:0',
         'plazo' => 'required|integer|min:1',
         'valor_prestamo' => 'required|numeric|min:0',
-        'periodo' => 'required'
+        'periodo' => 'required',
+        'fecha_inicio' => 'required|date'
     ]);
 
     Prestamo::create($validated + [

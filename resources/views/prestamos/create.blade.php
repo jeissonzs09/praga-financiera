@@ -26,6 +26,13 @@
             </div>
         @endif
 
+        <div class="mb-4">
+    <label for="fecha_inicio" class="block text-sm font-medium text-gray-700">Fecha de inicio del préstamo</label>
+    <input type="date" name="fecha_inicio" id="fecha_inicio"
+           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+           value="{{ old('fecha_inicio', \Carbon\Carbon::now()->format('Y-m-d')) }}">
+</div>
+
         <!-- Cliente -->
         <div>
             <label class="block font-medium mb-1">Cliente</label>
@@ -137,11 +144,13 @@ document.getElementById('btn-calcular').addEventListener('click', function () {
     document.getElementById('resultado').classList.remove('hidden');
 
     const formData = new FormData();
-    formData.append('valor_prestamo', monto);
-    formData.append('porcentaje_interes', tasaMensual * 100);
-    formData.append('plazo', plazoMeses);
-    formData.append('periodo', periodo);
-    formData.append('_token', '{{ csrf_token() }}');
+formData.append('valor_prestamo', monto);
+formData.append('porcentaje_interes', tasaMensual * 100);
+formData.append('plazo', plazoMeses);
+formData.append('periodo', periodo);
+formData.append('fecha_inicio', document.getElementById('fecha_inicio').value); // 👈 ahora sí se envía
+formData.append('_token', '{{ csrf_token() }}');
+
 
     fetch('{{ route("prestamos.simular") }}', {
         method: 'POST',
