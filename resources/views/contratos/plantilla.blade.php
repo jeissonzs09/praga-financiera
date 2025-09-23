@@ -43,7 +43,7 @@
 <p>
 Nosotros, <strong>{{ $prestamo->cliente->nombre_completo }}</strong>, mayor de edad, estado civil <strong>{{ $prestamo->cliente->estado_civil }}</strong>, 
 profesión u oficio <strong>{{ $prestamo->cliente->profesion }}</strong>, nacionalidad hondureña y con domicilio en 
-<strong>{{ $prestamo->cliente->direccion }}</strong>, ciudad de <strong>{{ $prestamo->cliente->ciudad }}</strong>, con Documento Nacional de Identidad No. 
+<strong>{{ $prestamo->cliente->direccion }}</strong>, con Documento Nacional de Identidad No. 
 <strong>{{ $prestamo->cliente->identificacion }}</strong>, actuando en mi condición personal, quien en adelante se denominará EL DEUDOR; 
 y, <strong>DIEGO ENRIQUE SORIANO AGUILAR</strong>, mayor de edad, soltero, hondureño y de este domicilio, actuando en mi condición de 
 Gerente General de INVERSIONES PRAGA SOCIEDAD ANÓNIMA que en adelante se conocerá como EL ACREEDOR; 
@@ -53,8 +53,26 @@ hemos convenido en celebrar y como al efecto celebramos el presente CONTRATO DE 
 <p><strong>PRIMERO. Información:</strong> Declara EL DEUDOR, que previo a la suscripción del presente contrato ha recibido a su satisfacción por parte del acreedor, la información relacionada con el presente contrato de préstamo, intereses, comisiones pactadas, así como las consecuencias por el incumplimiento de la obligación.</p>
 
 <p>
-<strong>SEGUNDO. Plazo:</strong> Es entendido que el plazo de pago de la cantidad de <strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong> Lempiras (Lps. <strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong>) recibida en calidad de préstamo, será de <strong>{{ $prestamo->plazo }}</strong> meses en cuotas de <strong>L. {{ number_format($montoCuota, 2) }}</strong>; comenzando el <strong>{{ \Carbon\Carbon::parse($fechaPrimeraCuota)->format('d') }}</strong> de <strong>{{ \Carbon\Carbon::parse($fechaPrimeraCuota)->translatedFormat('F') }}</strong> de <strong>{{ \Carbon\Carbon::parse($fechaPrimeraCuota)->format('Y') }}</strong> al <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('d') }}</strong> de <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->translatedFormat('F') }}</strong> de <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('Y') }}</strong> conforme al presente contrato y al plan de pago suscrito.
+<strong>SEGUNDO. Plazo:</strong> Es entendido que el plazo de pago de la cantidad de 
+<strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong> Lempiras (Lps. 
+<strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong>) recibida en calidad de préstamo, será de 
+<strong>{{ $prestamo->plazo }}</strong> meses en cuotas de 
+<strong>L. {{
+    number_format(
+        // Ajuste según frecuencia
+        $prestamo->frecuencia == 'semanal' ? $montoCuota * 4 : 
+        ($prestamo->frecuencia == 'quincenal' ? $montoCuota * 2 : $montoCuota),
+        2
+    )
+}}</strong>; comenzando el 
+<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('d') }}</strong> de 
+<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->translatedFormat('F') }}</strong> de 
+<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('Y') }}</strong> al 
+<strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('d') }}</strong> de 
+<strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->translatedFormat('F') }}</strong> de 
+<strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('Y') }}</strong> conforme al presente contrato y al plan de pago suscrito.
 </p>
+
 
 <p><strong>TERCERO. Disposición y condiciones del crédito:</strong> Las partes convienen que el monto total del crédito no incluye comisiones, intereses ordinarios, accesorios e impuestos y/o gastos que EL DEUDOR debe pagar a INVERSIONES PRAGA. El importe del crédito, EL DEUDOR realizará los pagos mediante cualquiera de las siguientes formas: 1) La entrega de efectivo en las cajas de INVERSIONES PRAGA; 2) cualquier otra forma o medio de disposición que EL ACREEDOR establezca, autorice o acepte en el futuro; dichas disposiciones estarán sujetas a las posibilidades de INVERSIONES PRAGA.</p>
 
@@ -136,7 +154,10 @@ b) EL DEUDOR, desde ya, autoriza expresamente para que EL ACREEDOR proceda a rec
 </p>
 
 <p>
-En fe de lo cual se firma este contrato en la ciudad de <strong>Pespire</strong>, Departamento de Choluteca, a los <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d') }}</strong> días del mes de <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->translatedFormat('F') }}</strong> del año <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('Y') }}</strong>.
+En fe de lo cual se firma este contrato en la ciudad de <strong>Pespire</strong>, Departamento de Choluteca, a los 
+<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('d') }}</strong> días del mes de 
+<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->translatedFormat('F') }}</strong> del año 
+<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('Y') }}</strong>.
 </p>
 
 <br><br><br>

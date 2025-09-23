@@ -101,11 +101,6 @@ Route::get('/pago-financiero/{prestamo}', [ContratoController::class, 'mostrarPa
 Route::get('contratos/{prestamo}/declaracion', [ContratoController::class, 'generarDeclaracion'])->name('contratos.declaracion');
 Route::get('contratos/{prestamo}/autorizacion', [ContratoController::class, 'generarAutorizacion'])->name('contratos.autorizacion');
 
-Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
-Route::get('reportes/generar', [ReporteController::class, 'generar'])->name('reportes.generar');
-
-Route::get('reportes/excel', [ReporteController::class, 'generarExcel'])->name('reportes.excel');
-
 // Paso 2: recibir datos y mostrar distribución
 Route::post('pagos/{prestamo}/distribuir', [PagoController::class, 'distribuir'])->name('pagos.distribuir');
 
@@ -114,6 +109,25 @@ Route::post('pagos/{prestamo}/guardar', [PagoController::class, 'guardarDistribu
 Route::get('recibos/{prestamo}', [ReciboController::class, 'index'])->name('recibos.index');
 Route::get('recibos/prestamo/{prestamo}', [ReciboController::class, 'index'])->name('recibos.index');
 Route::get('recibos/pdf/{id}', [ReciboController::class, 'pdf'])->name('recibos.pdf');
+
+Route::get('reportes/pagos', [ReporteController::class, 'pagosForm'])->name('reportes.pagosForm');
+Route::get('reportes/pagos/generar', [ReporteController::class, 'generarPagos'])->name('reportes.pagos');
+Route::get('reportes/pagos/descargar', [ReporteController::class, 'descargarReporte'])->name('reportes.descargar');
+Route::post('reportes/pagos/eliminar/{index}', [ReporteController::class, 'eliminarReporte'])->name('reportes.eliminar');
+Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+
+Route::get('/reportes/export', [ReporteController::class, 'exportPagos'])->name('reportes.export');
+
+Route::get('/reportes/excel', [ReporteController::class, 'exportarExcel'])->name('reportes.excel');
+Route::get('/reportes/pdf', [ReporteController::class, 'exportarPDF'])->name('reportes.pdf');
+Route::post('/reportes/generar', [ReporteController::class, 'generarReporte'])->name('reportes.generar');
+Route::get('/reportes/pagos/pdf', [ReporteController::class, 'exportarPDF'])->name('reportes.pdf');
+
+Route::post('/reportes/pagos/eliminar/{index}', [ReporteController::class, 'eliminarReporte'])->name('reportes.eliminar');
+
+
+
+
 
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.
 //require __DIR__.'/auth.php';

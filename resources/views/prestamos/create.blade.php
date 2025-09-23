@@ -5,6 +5,19 @@
 @endphp
 
 @section('content')
+
+<style>
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-selection {
+    height: 2.5rem !important; /* igual que tus inputs */
+    padding: 0.5rem 0.75rem !important;
+    font-size: 1rem !important;
+}
+</style>
+
 <div class="p-4 max-w-5xl mx-auto bg-white rounded shadow">
 
     <form action="{{ route('prestamos.store') }}" method="POST" class="space-y-8">
@@ -26,17 +39,18 @@
             </div>
         @endif
 
+        <!-- Fecha de inicio -->
         <div class="mb-4">
-    <label for="fecha_inicio" class="block text-sm font-medium text-gray-700">Fecha de inicio del préstamo</label>
-    <input type="date" name="fecha_inicio" id="fecha_inicio"
-           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-           value="{{ old('fecha_inicio', \Carbon\Carbon::now()->format('Y-m-d')) }}">
-</div>
+            <label for="fecha_inicio" class="block text-sm font-medium text-gray-700">Fecha de inicio del préstamo</label>
+            <input type="date" name="fecha_inicio" id="fecha_inicio"
+                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                   value="{{ old('fecha_inicio', \Carbon\Carbon::now()->format('Y-m-d')) }}">
+        </div>
 
-        <!-- Cliente -->
+        <!-- Cliente con Select2 -->
         <div>
             <label class="block font-medium mb-1">Cliente</label>
-            <select name="cliente_id" class="w-full border rounded px-3 py-2" required>
+            <select name="cliente_id" class="select2 w-full border rounded px-3 py-2" required>
                 <option value="">-- Seleccione un cliente --</option>
                 @foreach($clientes as $cliente)
                     <option value="{{ $cliente->id_cliente }}">{{ $cliente->nombre_completo }}</option>
@@ -44,7 +58,7 @@
             </select>
         </div>
 
-        <!-- Configuración -->
+        <!-- Configuración del préstamo -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block font-medium mb-1">Tipo de préstamo</label>
@@ -114,7 +128,25 @@
 @endsection
 
 @section('scripts')
+<!-- jQuery necesario para Select2 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Select2 CSS y JS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
+$(document).ready(function() {
+    // Inicializar Select2
+    $('.select2').select2({
+        placeholder: "-- Seleccione un cliente --",
+        allowClear: true,
+        width: 'resolve'
+    });
+});
+
+
+
+// Tu código de cálculo de préstamo
 document.getElementById('btn-calcular').addEventListener('click', function () {
     const monto = parseFloat(document.querySelector('[name="valor_prestamo"]').value);
     const tasaMensual = parseFloat(document.querySelector('[name="porcentaje_interes"]').value) / 100;
@@ -144,13 +176,12 @@ document.getElementById('btn-calcular').addEventListener('click', function () {
     document.getElementById('resultado').classList.remove('hidden');
 
     const formData = new FormData();
-formData.append('valor_prestamo', monto);
-formData.append('porcentaje_interes', tasaMensual * 100);
-formData.append('plazo', plazoMeses);
-formData.append('periodo', periodo);
-formData.append('fecha_inicio', document.getElementById('fecha_inicio').value); // 👈 ahora sí se envía
-formData.append('_token', '{{ csrf_token() }}');
-
+    formData.append('valor_prestamo', monto);
+    formData.append('porcentaje_interes', tasaMensual * 100);
+    formData.append('plazo', plazoMeses);
+    formData.append('periodo', periodo);
+    formData.append('fecha_inicio', document.getElementById('fecha_inicio').value);
+    formData.append('_token', '{{ csrf_token() }}');
 
     fetch('{{ route("prestamos.simular") }}', {
         method: 'POST',
@@ -160,18 +191,11 @@ formData.append('_token', '{{ csrf_token() }}');
     .then(cuotas => {
         mostrarTablaCuotas(cuotas);
     })
-    .catch(async error => {
-    try {
-        const data = await error.response.json();
-        console.error('Error del backend:', data);
-        alert('Error: ' + data.mensaje + '\nLínea: ' + data.linea + '\nArchivo: ' + data.archivo);
-    } catch (e) {
-        console.error('Error inesperado:', error);
-        alert('No se pudo cargar el plan de pago. Revisa la consola para más detalles.');
-    }
+    .catch(err => {
+        console.error('Error:', err);
+        alert('No se pudo cargar el plan de pago.');
     });
 });
-
 
 function mostrarTablaCuotas(cuotas) {
     let html = `

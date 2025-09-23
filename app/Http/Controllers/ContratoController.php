@@ -127,13 +127,21 @@ public function generarPagare(Prestamo $prestamo)
     \Carbon\Carbon::setLocale('es');
     $prestamo->load('cliente');
 
-    // ✅ Aquí generamos el texto en letras
+    // 🔹 Generar el plan de cuotas (igual que en generarPdf)
+    $plan = $this->generarPlan($prestamo);
+    $fechaUltimaCuota = end($plan)['vence']; // <-- aquí obtienes la última cuota
+
+    // ✅ Convertir valor a letras
     $letras = NumeroHelper::convertirALetras($prestamo->valor_prestamo);
 
-    // ✅ Enviamos $letras a la vista
-    return \Barryvdh\DomPDF\Facade\Pdf::loadView('contratos.pagare', compact('prestamo', 'letras'))
-        ->setPaper('letter')
-        ->download("Pagare-Prestamo-{$prestamo->id}.pdf");
+    // ✅ Pasar todas las variables necesarias a la vista
+    return \Barryvdh\DomPDF\Facade\Pdf::loadView('contratos.pagare', compact(
+        'prestamo',
+        'letras',
+        'fechaUltimaCuota' // <-- ahora ya existe en la vista
+    ))
+    ->setPaper('letter')
+    ->download("Pagare-Prestamo-{$prestamo->id}.pdf");
 }
 
 

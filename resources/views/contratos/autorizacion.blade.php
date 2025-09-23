@@ -39,8 +39,11 @@
     </p>
 
     <p>
-        Pespire, Choluteca, a los <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d') }}</strong> días del mes de <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->translatedFormat('F') }}</strong> del año <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('Y') }}</strong>.
-    </p>
+    Pespire, Choluteca, a los 
+    <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('d') }}</strong> días del mes de 
+    <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->translatedFormat('F') }}</strong> del año 
+    <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('Y') }}</strong>.
+</p>
 
     {{-- 🔹 Firma --}}
     <div class="firma" style="margin-top: 120px;">

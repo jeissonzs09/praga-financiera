@@ -61,9 +61,12 @@
         En caso de comprobarse lo contrario, autorizo expresamente a la empresa a iniciar las acciones legales que estime pertinentes en mi contra, asumiendo las consecuencias civiles, penales o administrativas que de ello se deriven.
     </p>
 
-    <p>
-        Firmo la presente en la ciudad de Pespire, departamento de Choluteca, a los <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d') }}</strong> días del mes de <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->translatedFormat('F') }}</strong> del año <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('Y') }}</strong>.
-    </p>
+<p>
+    Firmo la presente en la ciudad de Pespire, departamento de Choluteca, a los 
+    <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('d') }}</strong> días del mes de 
+    <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->translatedFormat('F') }}</strong> del año 
+    <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('Y') }}</strong>.
+</p>
 
     {{-- 🔹 Firma --}}
     <div class="firma">

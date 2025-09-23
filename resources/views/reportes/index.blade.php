@@ -10,34 +10,22 @@
     </h2>
 
     <form method="GET" action="{{ route('reportes.excel') }}" class="space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label for="inicio" class="block text-sm font-medium text-gray-700">📅 Fecha de inicio</label>
                 <input type="date" name="inicio" id="inicio" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-praga focus:ring-praga">
+                    class="border border-gray-300 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div>
                 <label for="fin" class="block text-sm font-medium text-gray-700">📅 Fecha final</label>
                 <input type="date" name="fin" id="fin" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-praga focus:ring-praga">
-            </div>
-            <div>
-                <label for="prestamo_id" class="block text-sm font-medium text-gray-700">💳 Préstamo</label>
-                <select name="prestamo_id" id="prestamo_id" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-praga focus:ring-praga">
-                    <option value="">Seleccione...</option>
-                    @foreach($prestamos as $prestamo)
-                        <option value="{{ $prestamo->id }}">
-                            {{ $prestamo->codigo }} — {{ $prestamo->cliente->nombre }}
-                        </option>
-                    @endforeach
-                </select>
+                    class="border border-gray-300 rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
         </div>
 
         <div class="text-right">
-            <button type="submit"
-                class="inline-flex items-center bg-praga hover:bg-praga-dark text-white font-semibold px-5 py-2 rounded shadow">
+            <button type="submit" 
+                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
                 📥 Descargar Excel
             </button>
         </div>
