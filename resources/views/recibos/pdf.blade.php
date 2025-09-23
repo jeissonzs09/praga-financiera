@@ -33,7 +33,7 @@
             <div>Fecha límite de emisión: {{ $fechaLimite }}</div>
         </div>
         <div class="header-info">
-            <div class="recibo-num">RECIBO DE ABONO No. {{ sprintf('000-000-00-%08d', $recibo->id_recibo) }}</div>
+            <div class="recibo-num">RECIBO DE ABONO No. {{ sprintf('000-000-00-%08d', $recibo->id) }}</div>
             <div>Original</div>
         </div>
     </div>

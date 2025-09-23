@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <style>
         @page {
-            margin: 2.5cm 2.5cm 2.5cm 2.5cm; /* Márgenes: arriba, derecha, abajo, izquierda */
+            margin: 1.5cm 1.5cm 1.5cm 1.5cm; /* Márgenes: arriba, derecha, abajo, izquierda */
         }
         body {
             font-family: "Times New Roman", Times, serif;
-            font-size: 12pt;
+            font-size: 11pt;
             line-height: 1.5;
             text-align: justify;
         }
@@ -46,13 +46,15 @@ profesión u oficio <strong>{{ $prestamo->cliente->profesion }}</strong>, nacion
 <strong>{{ $prestamo->cliente->direccion }}</strong>, ciudad de <strong>{{ $prestamo->cliente->ciudad }}</strong>, con Documento Nacional de Identidad No. 
 <strong>{{ $prestamo->cliente->identificacion }}</strong>, actuando en mi condición personal, quien en adelante se denominará EL DEUDOR; 
 y, <strong>DIEGO ENRIQUE SORIANO AGUILAR</strong>, mayor de edad, soltero, hondureño y de este domicilio, actuando en mi condición de 
-Gerente General de INVERSIONES PRAGA SOCIEDAD ANÓNIMA que en adelante se conocerá como EL ACREEDOR S.A.; 
+Gerente General de INVERSIONES PRAGA SOCIEDAD ANÓNIMA que en adelante se conocerá como EL ACREEDOR; 
 hemos convenido en celebrar y como al efecto celebramos el presente CONTRATO DE PRÉSTAMO sujeto a las siguientes estipulaciones:
 </p>
 
 <p><strong>PRIMERO. Información:</strong> Declara EL DEUDOR, que previo a la suscripción del presente contrato ha recibido a su satisfacción por parte del acreedor, la información relacionada con el presente contrato de préstamo, intereses, comisiones pactadas, así como las consecuencias por el incumplimiento de la obligación.</p>
 
-<p><strong>SEGUNDO. Plazo:</strong> Es entendido que el plazo de pago de la cantidad de <strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong> Lempiras (Lps. <strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong>) recibida en calidad de préstamo, será de <strong>{{ $prestamo->plazo }}</strong> meses en cuotas de <strong>{{ ucfirst($prestamo->periodo) }}</strong>; comenzando el <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d') }}</strong> de <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->translatedFormat('F') }}</strong> de <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('Y') }}</strong> al <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('d') }}</strong> de <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->translatedFormat('F') }}</strong> de <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_fin)->format('Y') }}</strong> conforme al presente contrato y al plan de pago suscrito.</p>
+<p>
+<strong>SEGUNDO. Plazo:</strong> Es entendido que el plazo de pago de la cantidad de <strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong> Lempiras (Lps. <strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong>) recibida en calidad de préstamo, será de <strong>{{ $prestamo->plazo }}</strong> meses en cuotas de <strong>L. {{ number_format($montoCuota, 2) }}</strong>; comenzando el <strong>{{ \Carbon\Carbon::parse($fechaPrimeraCuota)->format('d') }}</strong> de <strong>{{ \Carbon\Carbon::parse($fechaPrimeraCuota)->translatedFormat('F') }}</strong> de <strong>{{ \Carbon\Carbon::parse($fechaPrimeraCuota)->format('Y') }}</strong> al <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('d') }}</strong> de <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->translatedFormat('F') }}</strong> de <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('Y') }}</strong> conforme al presente contrato y al plan de pago suscrito.
+</p>
 
 <p><strong>TERCERO. Disposición y condiciones del crédito:</strong> Las partes convienen que el monto total del crédito no incluye comisiones, intereses ordinarios, accesorios e impuestos y/o gastos que EL DEUDOR debe pagar a INVERSIONES PRAGA. El importe del crédito, EL DEUDOR realizará los pagos mediante cualquiera de las siguientes formas: 1) La entrega de efectivo en las cajas de INVERSIONES PRAGA; 2) cualquier otra forma o medio de disposición que EL ACREEDOR establezca, autorice o acepte en el futuro; dichas disposiciones estarán sujetas a las posibilidades de INVERSIONES PRAGA.</p>
 
@@ -110,9 +112,72 @@ Dichas garantías consisten en:
 
 Con el propósito de asegurarse de que las condiciones patrimoniales en garantía, que EL ACREEDOR tuvo en cuenta para la aprobación y otorgamiento de este crédito, se mantienen.  
 
-b) EL DEUDOR, desde ya, autoriza expresamente para que EL ACREEDOR proceda a recoger, recuperar o asegurar el artículo puesto en garantía.
+b) EL DEUDOR, desde ya, autoriza expresamente para que EL ACREEDOR proceda a recoger, recuperar o asegurar el artículo puesto en garantía para la obtención del crédito, una vez vencidos los plazos establecidos en las cláusulas que antecede.
 </p>
 
+<p>
+<strong>NOVENO. MODIFICACIONES:</strong> La tasa de interés NOMINAL VARIABLE podrá ser modificada automáticamente de conformidad a las condiciones del sistema financiero nacional y/o de los proveedores de los fondos, aceptando EL DEUDOR que al efectuarse la referida modificación de la tasa de interés pactada la cuota podrá aumentar de conformidad a dicha modificación, quedando convenido que EL ACREEDOR está autorizado para cobrar y efectuar tales ajustes, previa notificación.
+</p>
+
+<p>
+<strong>DÉCIMO:</strong> EL DEUDOR tendrá el derecho a la cancelación anticipada de los saldos adeudados, debiendo pagar el total pactado en este contrato, el capital más los intereses convenidos.
+</p>
+
+<p>
+<strong>DÉCIMO PRIMERO:</strong> EL DEUDOR se obliga al fiel cumplimiento de las condiciones y términos antes relacionados en este contrato, así como las indicadas en la carátula del crédito, plan de pago, pagaré y cualquier otro documento que se genere a raíz de este contrato.
+</p>
+
+<p>
+<strong>DÉCIMO SEGUNDO. RECLAMOS:</strong> EL DEUDOR podrá presentar reclamo a EL ACREEDOR si considera que se le está cobrando el valor de la cuota antes de la fecha o más de lo pactado en el presente contrato, con sus recibos y documentos que acrediten tal hecho.
+</p>
+
+<p>
+<strong>DÉCIMO TERCERO:</strong> Manifiesta el señor <strong>DIEGO ENRIQUE SORIANO AGUILAR</strong> en su condición de Gerente General de INVERSIONES PRAGA: Que con instrucciones precisas de su representada declara ser cierto en todas sus partes lo declarado anteriormente por el señor(a) <strong>{{ $prestamo->cliente->nombre_completo }}</strong>, quien es EL DEUDOR, y por ser así lo convenido, se aceptan las condiciones y términos establecidas en el presente contrato de préstamo.
+</p>
+
+<p>
+En fe de lo cual se firma este contrato en la ciudad de <strong>Pespire</strong>, Departamento de Choluteca, a los <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('d') }}</strong> días del mes de <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->translatedFormat('F') }}</strong> del año <strong>{{ \Carbon\Carbon::parse($prestamo->fecha_inicio)->format('Y') }}</strong>.
+</p>
+
+<br><br><br>
+
+<table style="width:100%; font-size:12pt;">
+    <tr>
+        {{-- 🔹 Columna izquierda: Nombre y DNI --}}
+        <td style="width:50%; vertical-align:top;">
+            _________________________________________<br>
+                      Nombre y EL DEUDOR<br>
+             DNI: {{ $prestamo->cliente->identificacion }}
+        </td>
+
+        {{-- 🔹 Columna derecha: Firma y huella --}}
+        <td style="width:50%; vertical-align:top; text-align:right;">
+            _________________________________________<br>
+                   Firma y huella de EL DEUDOR
+        </td>
+    </tr>
+</table>
+
+<br><br>
+
+{{-- 🔹 Firma centrada del Gerente General --}}
+<div style="text-align:center; font-size:12pt;">
+    _________________________________________<br>
+         FIRMA Y SELLO GERENTE GENERAL<br>
+             RTN: 06019025150113
+</div>
+
+<br><br>
+
+{{-- 🔹 Información institucional centrada --}}
+<div style="text-align:center; font-size:12pt; font-weight:bold;">
+    INVERSIONES PRAGA S.A.<br>
+    Barrio el Centro, Calle del Comercio, contiguo a Inversiones Rafael<br>
+    Pespire, Choluteca, Honduras.<br>
+    Teléfono: 8998-2346<br>
+    Correo electrónico: inv.praga2025@gmail.com<br>
+    RTN: 06019025150113
+</div>
 
 </body>
 </html>

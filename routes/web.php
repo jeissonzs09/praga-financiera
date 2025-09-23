@@ -9,6 +9,7 @@ use App\Http\Controllers\PagoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReciboController;
 use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\ReporteController;
 
 
 Route::get('/', function () {
@@ -95,7 +96,24 @@ Route::get('/contratos', [ContratoController::class, 'index'])->name('contratos.
 // Generar PDF de contrato
 Route::get('/contratos/{prestamo}/pdf', [ContratoController::class, 'generarPdf'])->name('contratos.pdf');
 
+Route::get('contratos/{prestamo}/pagare', [ContratoController::class, 'generarPagare'])->name('contratos.pagare');
+Route::get('/pago-financiero/{prestamo}', [ContratoController::class, 'mostrarPago'])->name('contratos.pago');
+Route::get('contratos/{prestamo}/declaracion', [ContratoController::class, 'generarDeclaracion'])->name('contratos.declaracion');
+Route::get('contratos/{prestamo}/autorizacion', [ContratoController::class, 'generarAutorizacion'])->name('contratos.autorizacion');
 
+Route::get('reportes', [ReporteController::class, 'index'])->name('reportes.index');
+Route::get('reportes/generar', [ReporteController::class, 'generar'])->name('reportes.generar');
+
+Route::get('reportes/excel', [ReporteController::class, 'generarExcel'])->name('reportes.excel');
+
+// Paso 2: recibir datos y mostrar distribución
+Route::post('pagos/{prestamo}/distribuir', [PagoController::class, 'distribuir'])->name('pagos.distribuir');
+
+// Paso final: guardar distribución
+Route::post('pagos/{prestamo}/guardar', [PagoController::class, 'guardarDistribucion'])->name('pagos.guardar');
+Route::get('recibos/{prestamo}', [ReciboController::class, 'index'])->name('recibos.index');
+Route::get('recibos/prestamo/{prestamo}', [ReciboController::class, 'index'])->name('recibos.index');
+Route::get('recibos/pdf/{id}', [ReciboController::class, 'pdf'])->name('recibos.pdf');
 
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.
 //require __DIR__.'/auth.php';

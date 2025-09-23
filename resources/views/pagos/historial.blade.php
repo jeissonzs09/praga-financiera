@@ -13,7 +13,7 @@
     {{-- Encabezado con botón a la derecha --}}
     <div class="flex justify-between items-center mb-3">
         <h4 class="text-lg font-semibold">Historial de pagos — {{ $prestamo->cliente->nombre }}</h4>
-        <a href="{{ route('recibos.index', $prestamo->id) }}"
+        <a href="{{ route('recibos.index', ['prestamo' => $prestamo->id]) }}"
            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded shadow text-sm flex items-center gap-1">
             📄 <span>Ver recibos</span>
         </a>
@@ -25,23 +25,26 @@
             <thead class="bg-blue-900 text-white">
                 <tr>
                     <th class="px-3 py-2 border">Fecha</th>
-                    <th class="px-3 py-2 border">Cuota</th>
-                    <th class="px-3 py-2 border text-right">Monto</th>
+                    <th class="px-3 py-2 border text-center">Cuota</th>
+                    <th class="px-3 py-2 border text-right">Capital</th>
+                    <th class="px-3 py-2 border text-right">Interés</th>
+                    <th class="px-3 py-2 border text-right">Total</th>
                     <th class="px-3 py-2 border">Observaciones</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($prestamo->pagos as $pago)
+                @forelse($detalles as $detalle)
                     <tr class="border-b hover:bg-gray-50">
-                        <td class="px-3 py-2 border">{{ $pago->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="px-3 py-2 border text-center">{{ $pago->cuota_numero ?? '-' }}</td>
-                        <td class="px-3 py-2 border text-right">L. {{ number_format($pago->monto, 2) }}</td>
-                        <td class="px-3 py-2 border">{{ $pago->observaciones }}</td>
-                        </td>
+                        <td class="px-3 py-2 border">{{ $detalle->created_at->format('d/m/Y H:i') }}</td>
+                        <td class="px-3 py-2 border text-center">{{ $detalle->cuota_numero }}</td>
+                        <td class="px-3 py-2 border text-right">L. {{ number_format($detalle->capital, 2) }}</td>
+                        <td class="px-3 py-2 border text-right">L. {{ number_format($detalle->interes, 2) }}</td>
+                        <td class="px-3 py-2 border text-right">L. {{ number_format($detalle->total, 2) }}</td>
+                        <td class="px-3 py-2 border">{{ $detalle->observaciones ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="py-4 text-center text-gray-500">No hay pagos registrados</td>
+                        <td colspan="6" class="py-4 text-center text-gray-500">No hay pagos registrados</td>
                     </tr>
                 @endforelse
             </tbody>

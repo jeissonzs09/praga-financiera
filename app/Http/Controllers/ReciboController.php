@@ -2,24 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Recibo;
 use App\Models\Prestamo;
 use Barryvdh\DomPDF\Facade\Pdf; // Importar DomPDF
+use App\Models\ReciboPago;
+
 
 class ReciboController extends Controller
 {
-    public function index($prestamoId)
-    {
-        $prestamo = Prestamo::findOrFail($prestamoId);
+public function index($prestamoId)
+{
+    $prestamo = Prestamo::with('cliente')->findOrFail($prestamoId);
 
-        // Traer todos los recibos de este préstamo con sus detalles
-        $recibos = Recibo::with('detalles')
-            ->where('prestamo_id', $prestamoId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+    $recibos = ReciboPago::where('prestamo_id', $prestamo->id)
+                         ->orderBy('created_at', 'desc')
+                         ->get();
 
-        return view('recibos.index', compact('prestamo', 'recibos'));
-    }
+    return view('recibos.index', compact('prestamo', 'recibos'));
+}
 
     public function show($idRecibo)
 {
@@ -180,39 +179,36 @@ private function generarPlanOriginal(Prestamo $prestamo)
 /**
  * Generar PDF del recibo
  */
-public function pdf($idRecibo)
+public function pdf($id)
 {
-    $recibo = Recibo::with(['prestamo.cliente', 'detalles'])
-        ->findOrFail($idRecibo);
+    $recibo = ReciboPago::with(['prestamo.cliente', 'detalles'])->findOrFail($id);
 
-    // Buscar recibo anterior
-    $reciboAnterior = Recibo::where('prestamo_id', $recibo->prestamo_id)
-        ->where('id_recibo', '<', $recibo->id_recibo)
-        ->orderBy('id_recibo', 'desc')
+    $reciboAnterior = ReciboPago::where('prestamo_id', $recibo->prestamo_id)
+        ->where('id', '<', $recibo->id)
+        ->orderBy('id', 'desc')
         ->first();
 
     $capitalTotal = $recibo->prestamo->valor_prestamo;
-$interesTotal = $capitalTotal * ($recibo->prestamo->porcentaje_interes / 100) * $recibo->prestamo->plazo;
-$deudaTotal   = $capitalTotal + $interesTotal;
+    $interesTotal = $capitalTotal * ($recibo->prestamo->porcentaje_interes / 100) * $recibo->prestamo->plazo;
+    $deudaTotal   = $capitalTotal + $interesTotal;
 
-if ($reciboAnterior) {
-    $pagosPrevios = $recibo->prestamo->recibos()
-        ->where('id_recibo', '<', $recibo->id_recibo)
-        ->sum('monto_total');
+    if ($reciboAnterior) {
+        $pagosPrevios = $recibo->prestamo->recibos()
+            ->where('id', '<', $recibo->id)
+            ->sum('monto');
 
-    $saldoAnterior = $deudaTotal - $pagosPrevios;
-} else {
-    $saldoAnterior = $deudaTotal;
-}
+        $saldoAnterior = $deudaTotal - $pagosPrevios;
+    } else {
+        $saldoAnterior = $deudaTotal;
+    }
 
+    $capitalAbonado = $recibo->monto;
+    $saldoActual    = $saldoAnterior - $capitalAbonado;
 
-    $capitalAbonado = $recibo->monto_total;
-    $saldoActual = $saldoAnterior - $capitalAbonado;
+    // ✅ No se guarda en BD, solo se usa como propiedad temporal
+    $recibo->saldo_calculado = $saldoActual;
 
-    $recibo->saldo_actual = $saldoActual;
-    $recibo->save();
-
-    $montoLetras = $this->montoEnLetras($recibo->monto_total);
+    $montoLetras = $this->montoEnLetras($recibo->monto);
 
     $pdf = Pdf::loadView('recibos.pdf', [
         'recibo'           => $recibo,
@@ -225,23 +221,16 @@ if ($reciboAnterior) {
         'fechaLimite'      => '31/12/2050'
     ])->setPaper('letter', 'portrait');
 
-    // Código de préstamo con ceros
     $codigoPrestamo = 'PRG-' . str_pad($recibo->prestamo->id, 6, '0', STR_PAD_LEFT);
+    $nombreCliente  = preg_replace('/[^A-Za-z0-9]/', '', $recibo->prestamo->cliente->nombre_completo);
+    $fechaRecibo    = $recibo->created_at->format('Ymd');
+    $numeroRecibo   = str_pad($recibo->id, 6, '0', STR_PAD_LEFT);
 
-    // Nombre del cliente limpio
-    $nombreCliente = preg_replace('/[^A-Za-z0-9]/', '', $recibo->prestamo->cliente->nombre_completo);
-
-    // Fecha del recibo en formato YYYYMMDD para identificar pago
-    $fechaRecibo = $recibo->created_at->format('Ymd');
-
-    // Número de recibo con ceros
-    $numeroRecibo = str_pad($recibo->id_recibo, 6, '0', STR_PAD_LEFT);
-
-    // Nombre final del archivo
     $nombreArchivo = "Prestamo_{$codigoPrestamo}_{$nombreCliente}_{$fechaRecibo}_Recibo{$numeroRecibo}.pdf";
 
     return $pdf->download($nombreArchivo);
 }
+
 
 /**
  * Convierte monto a letras

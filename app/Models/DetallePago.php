@@ -8,21 +8,27 @@ class DetallePago extends Model
 {
     protected $table = 'detalle_pagos';
     protected $primaryKey = 'id';
-    public $timestamps = true;
+    public $incrementing = true;
 
     protected $fillable = [
-        'id_recibo',
         'cuota_numero',
+        'prestamo_id',
         'capital',
         'interes',
         'recargo',
         'mora',
-        'total'
+        'total',
+        'id_recibo',
     ];
 
-    // Relación inversa con pago
-    public function pago()
+    public function recibo()
     {
-        return $this->belongsTo(Pago::class, 'id_pago', 'id_pago');
+        // detalle_pagos.id_recibo → recibo_pagos.id
+        return $this->belongsTo(ReciboPago::class, 'id_recibo', 'id');
+    }
+
+    public function prestamo()
+    {
+        return $this->belongsTo(Prestamo::class, 'prestamo_id');
     }
 }

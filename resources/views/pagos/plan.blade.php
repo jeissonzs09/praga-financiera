@@ -19,15 +19,10 @@
     </div>
 
     <div class="mb-4 flex justify-end gap-2">
-        @if($prestamo->estado !== 'Finalizado')
-            <button
-                type="button"
-                onclick="abrirModalPago()"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
-            >
-                Registrar pago
-            </button>
-        @endif
+<a href="{{ route('pagos.create', $prestamo->id) }}"
+   class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+    Registrar pago
+</a>
 
         <a href="{{ route('pagos.listar', $prestamo->id) }}"
    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">
@@ -116,48 +111,3 @@ if ($cuota['estado'] === 'Pagada' && $cuota['es_tardio'] === true){
     </div>
 </div>
 @endsection
-
-<!-- Modal de pago -->
-<div id="modalPago" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow p-6 w-full max-w-md">
-        <h2 class="text-lg font-bold mb-4">Registrar pago</h2>
-        <form action="{{ route('pagos.store', $prestamo->id) }}" method="POST">
-            @csrf
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Monto</label>
-                <input type="number" step="0.01" name="monto" required class="border rounded px-3 py-2 w-full">
-            </div>
-
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Método de pago</label>
-                <select name="metodo_pago" required class="border rounded px-3 py-2 w-full">
-                    <option value="">Seleccione...</option>
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Transferencia">Transferencia</option>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label class="block text-sm font-medium">Observaciones</label>
-                <textarea name="observaciones" class="border rounded px-3 py-2 w-full"></textarea>
-            </div>
-
-            <div class="flex justify-end gap-2">
-                <button type="button" onclick="cerrarModalPago()" class="px-4 py-2 rounded border">Cancelar</button>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Guardar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-function abrirModalPago() {
-    document.getElementById('modalPago').classList.remove('hidden');
-    document.getElementById('modalPago').classList.add('flex');
-}
-
-function cerrarModalPago() {
-    document.getElementById('modalPago').classList.add('hidden');
-    document.getElementById('modalPago').classList.remove('flex');
-}
-</script>

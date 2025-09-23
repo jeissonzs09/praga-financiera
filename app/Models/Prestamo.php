@@ -28,14 +28,16 @@ class Prestamo extends Model
         return $this->belongsTo(Cliente::class, 'cliente_id', 'id_cliente');
     }
 
+// App\Models\Prestamo.php
 public function pagos()
 {
-    return $this->hasMany(Pago::class, 'prestamo_id', 'id');
+    return $this->hasMany(ReciboPago::class, 'prestamo_id'); // clave foránea correcta
 }
+
 
 public function recibos()
 {
-    return $this->hasMany(Recibo::class, 'prestamo_id');
+    return $this->hasMany(ReciboPago::class, 'prestamo_id');
 }
 
 }

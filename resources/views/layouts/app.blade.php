@@ -218,6 +218,15 @@
         </svg>
         Condonaciones
     </a>
+
+<a href="{{ route('reportes.index') }}">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 inline-block mr-2" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M5 3a1 1 0 0 1 1 1v16a1 1 0 0 1-2 0V4a1 1 0 0 1 1-1zm7 5a1 1 0 0 1 1 1v11a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1zm7 3a1 1 0 0 1 1 1v8a1 1 0 0 1-2 0v-8a1 1 0 0 1 1-1z"/>
+    </svg>
+    Reportes
+</a>
+
+
 </div>
 
 <!-- 🔷 Contenido principal -->

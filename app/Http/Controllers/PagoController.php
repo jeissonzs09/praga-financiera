@@ -9,6 +9,7 @@ use App\Models\Pago;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\DetallePago;
 use App\Models\Recibo;
+use App\Models\ReciboPago;
 
 class PagoController extends Controller
 {
@@ -124,64 +125,81 @@ public function createPago($prestamoId)
 public function storePago(Request $request, $prestamoId)
 {
     $request->validate([
-        'monto' => 'required|numeric|min:0.01',
+        'monto'         => 'required|numeric|min:0.01',
+        'metodo_pago'   => 'required|string',
         'observaciones' => 'nullable|string|max:255',
+        'cuotas'        => 'nullable|array',
     ]);
 
     $prestamo = Prestamo::with('pagos')->findOrFail($prestamoId);
-    $montoRestante = $request->monto;
+    $cuotas = $this->generarPlan($prestamo);
 
-    $recibo = Recibo::create([
-        'prestamo_id'  => $prestamo->id,
-        'monto_total'  => $request->monto,
-        'observaciones'=> $request->observaciones,
-    ]);
-
-    $cuotas = $this->generarPlan($prestamo); // solo valores base
-
-    foreach ($cuotas as $cuota) {
-        $cuotaNum = $cuota['nro'];
-        $pagadoEnBD = $prestamo->pagos()->where('cuota_numero', $cuotaNum)->sum('monto');
-        $totalCuota = $cuota['capital'] + $cuota['interes'];
-        $pendienteReal = $totalCuota - $pagadoEnBD;
-
-        if ($pendienteReal <= 0) continue;
-
-        $montoAplicar = min($montoRestante, $pendienteReal);
-
-        // Guardar en historial
-        Pago::create([
-            'prestamo_id'  => $prestamo->id,
-            'cuota_numero' => $cuotaNum,
-            'monto'        => $montoAplicar,
-            'observaciones'=> $request->observaciones,
-        ]);
-
-        // Detalle pago: primero interés, luego capital
-        if ($montoAplicar < $totalCuota) {
-            $interesAplicado = min($cuota['interes'], $montoAplicar);
-            $capitalAplicado = $montoAplicar - $interesAplicado;
-        } else {
-            $interesAplicado = $cuota['interes'];
-            $capitalAplicado = $cuota['capital'];
-        }
-
-        DetallePago::create([
-            'id_recibo'    => $recibo->id_recibo,
-            'cuota_numero' => $cuotaNum,
-            'capital'      => round($capitalAplicado, 2),
-            'interes'      => round($interesAplicado, 2),
-            'recargo'      => 0,
-            'mora'         => 0,
-            'total'        => round($montoAplicar, 2),
-        ]);
-
-        $montoRestante -= $montoAplicar;
-
-        if ($montoRestante <= 0) break;
+    // 🔹 Detectar primera cuota pendiente
+    $cuotaActual = collect($cuotas)->firstWhere('estado', 'Pendiente');
+    if (!$cuotaActual) {
+        return back()->with('error', 'No hay cuotas pendientes para este préstamo.');
     }
 
-    // Verificar si préstamo liquidado
+    $totalCuota = $cuotaActual['capital'] + $cuotaActual['interes'];
+    $montoIngresado = $request->input('monto');
+    $excedente = $montoIngresado - $totalCuota;
+
+    // 🔹 Validar suma distribuida por cuotas
+    $sumaDistribuida = 0;
+    foreach ($request->input('cuotas', []) as $datos) {
+        $sumaDistribuida += floatval($datos['capital'] ?? 0) + floatval($datos['interes'] ?? 0);
+    }
+
+    if ($excedente > 0 && $sumaDistribuida > $excedente) {
+        return back()->with('error', 'La suma distribuida excede el excedente disponible.');
+    }
+
+    // 🔹 Crear recibo
+    $recibo = Recibo::create([
+        'prestamo_id'   => $prestamo->id,
+        'monto_total'   => $montoIngresado,
+        'metodo_pago'   => $request->metodo_pago,
+        'observaciones' => $request->observaciones,
+    ]);
+
+    // 🔹 Registrar pago base
+    Pago::create([
+        'prestamo_id'   => $prestamo->id,
+        'cuota_numero'  => $cuotaActual['nro'],
+        'monto'         => $totalCuota,
+        'observaciones' => $request->observaciones,
+    ]);
+
+    DetallePago::create([
+        'id_recibo'     => $recibo->id_recibo,
+        'cuota_numero'  => $cuotaActual['nro'],
+        'capital'       => round($cuotaActual['capital'], 2),
+        'interes'       => round($cuotaActual['interes'], 2),
+        'recargo'       => 0,
+        'mora'          => 0,
+        'total'         => round($totalCuota, 2),
+    ]);
+
+    // 🔹 Registrar distribución manual por cuotas
+    foreach ($request->input('cuotas', []) as $nro => $datos) {
+        $capital = floatval($datos['capital'] ?? 0);
+        $interes = floatval($datos['interes'] ?? 0);
+        $total = $capital + $interes;
+
+        if ($total > 0) {
+            DetallePago::create([
+                'id_recibo'     => $recibo->id_recibo,
+                'cuota_numero'  => $nro,
+                'capital'       => round($capital, 2),
+                'interes'       => round($interes, 2),
+                'recargo'       => 0,
+                'mora'          => 0,
+                'total'         => round($total, 2),
+            ]);
+        }
+    }
+
+    // 🔹 Verificar si préstamo está liquidado
     $totalPagado = $prestamo->pagos()->sum('monto');
     $totalOriginal = array_sum(array_column($cuotas, 'capital')) +
                      array_sum(array_column($cuotas, 'interes'));
@@ -194,6 +212,7 @@ public function storePago(Request $request, $prestamoId)
     return redirect()->route('pagos.plan', $prestamo->id)
         ->with('success', 'Pago registrado y aplicado correctamente.');
 }
+
 
 // Controlador para mostrar plan
 public function mostrarPlan($prestamoId)
@@ -214,26 +233,29 @@ private function generarPlanPagos(Prestamo $prestamo)
         $cuotaNum = $cuota['nro'];
 
         // Obtener todos los pagos registrados para esta cuota
-        $pagos = $prestamo->pagos()->where('cuota_numero', $cuotaNum)->orderBy('created_at')->get();
-        $pagado = $pagos->sum('monto');
+        $pagos = DetallePago::where('prestamo_id', $prestamo->id)
+                    ->where('cuota_numero', $cuotaNum)
+                    ->orderBy('created_at')
+                    ->get();
+        $capitalPagado = $pagos->sum('capital');
+$interesPagado = $pagos->sum('interes');
         $fechaPago = optional($pagos->first())->created_at;
 
         // Cálculo de capital pagado e interés restante
-        $capitalPagado     = max($pagado - $cuota['interes'], 0);
-        $interesRestante   = max($cuota['interes'] - $pagado, 0);
         $capitalRestante   = max($cuota['capital'] - $capitalPagado, 0);
-        $totalRestante     = $interesRestante + $capitalRestante;
+$interesRestante   = max($cuota['interes'] - $interesPagado, 0);
+$totalRestante     = $capitalRestante + $interesRestante;
 
         // Estado de la cuota
-        if ($totalRestante == 0) {
-            $estado = 'Pagada';
-        } elseif ($pagado > 0) {
-            $estado = 'Parcial';
-        } elseif (\Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($cuota['vence']))) {
-            $estado = 'Vencida';
-        } else {
-            $estado = 'Pendiente';
-        }
+        if ($capitalRestante == 0 && $interesRestante == 0) {
+    $estado = 'Pagada';
+} elseif ($capitalPagado > 0 || $interesPagado > 0) {
+    $estado = 'Parcial';
+} elseif (\Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($cuota['vence']))) {
+    $estado = 'Vencida';
+} else {
+    $estado = 'Pendiente';
+}
 
         // Evaluar si el pago fue tardío
         $vence = \Carbon\Carbon::parse($cuota['vence']);
@@ -263,11 +285,13 @@ private function generarPlanPagos(Prestamo $prestamo)
 
 public function historial($prestamoId)
 {
-    $prestamo = Prestamo::with(['cliente', 'pagos' => function($q) {
-        $q->orderBy('cuota_numero')->orderBy('created_at');
-    }])->findOrFail($prestamoId);
+    $prestamo = Prestamo::with('cliente')->findOrFail($prestamoId);
 
-    return view('pagos.historial', compact('prestamo'));
+    $detalles = DetallePago::where('prestamo_id', $prestamo->id)
+                           ->orderBy('cuota_numero', 'asc')
+                           ->get();
+
+    return view('pagos.historial', compact('prestamo', 'detalles'));
 }
 
 private function generarPlanOriginal(Prestamo $prestamo)
@@ -513,23 +537,15 @@ public function eliminarPago(Pago $pago)
 public function eliminarRecibo($idRecibo)
 {
     // 1️⃣ Buscar el recibo
-    $recibo = Recibo::findOrFail($idRecibo);
+    $recibo = ReciboPago::findOrFail($idRecibo);
 
-    // 2️⃣ Obtener las cuotas afectadas por ese recibo
-    $cuotas = DetallePago::where('id_recibo', $idRecibo)->pluck('cuota_numero');
-
-    // 3️⃣ Eliminar los pagos por cuota que correspondan a esas cuotas
-    Pago::where('prestamo_id', $recibo->prestamo_id)
-        ->whereIn('cuota_numero', $cuotas)
-        ->delete();
-
-    // 4️⃣ Eliminar los detalles del recibo
+    // 2️⃣ Eliminar los detalles del recibo
     DetallePago::where('id_recibo', $idRecibo)->delete();
 
-    // 5️⃣ Eliminar el recibo en sí
+    // 3️⃣ Eliminar el recibo en sí
     $recibo->delete();
 
-    return back()->with('success', 'Pago eliminado correctamente y plan restaurado.');
+    return back()->with('success', 'Recibo y sus pagos eliminados correctamente.');
 }
 
 public function pdfPlanOriginal($prestamoId)
@@ -546,6 +562,58 @@ public function pdfPlanOriginal($prestamoId)
 $nombreArchivo = 'Plan_de_pago_' . $nombreCliente . '.pdf';
 
     return $pdf->download($nombreArchivo);
+}
+
+public function distribuir(Request $request, $prestamoId)
+{
+    $prestamo = Prestamo::findOrFail($prestamoId);
+
+    return view('pagos.distribuir', [
+        'prestamo'      => $prestamo,
+        'monto'         => $request->monto,
+        'metodo_pago'   => $request->metodo_pago,
+        'observaciones' => $request->observaciones,
+        'cuotas'        => $this->generarPlanPagos($prestamo),
+    ]);
+
+}
+
+public function guardarDistribucion(Request $request, $prestamoId)
+{
+    $prestamo = Prestamo::findOrFail($prestamoId);
+    $cuotas = $request->input('cuotas');
+    $montoTotal = floatval($request->input('monto_total'));
+
+    // 🔹 Aquí registrás el recibo general
+    $recibo = ReciboPago::create([
+        'prestamo_id' => $prestamo->id,
+        'monto' => $montoTotal,
+        'metodo_pago' => $request->input('metodo_pago'),
+        'observaciones' => $request->input('observaciones'),
+        'fecha_pago' => now(),
+    ]);
+
+    // 🔹 Luego registrás cada cuota afectada
+    foreach ($cuotas as $nro => $datos) {
+        $capital = floatval($datos['capital']);
+        $interes = floatval($datos['interes']);
+        $recargo = floatval($datos['recargo']);
+        $total = $capital + $interes + $recargo;
+
+        DetallePago::create([
+            'prestamo_id' => $prestamo->id,
+            'cuota_numero' => $nro,
+            'capital' => $capital,
+            'interes' => $interes,
+            'recargo' => $recargo,
+            'mora' => 0,
+            'total' => $total,
+            'id_recibo' => $recibo->id,
+        ]);
+    }
+
+    return redirect()->route('pagos.plan', $prestamo->id)
+                     ->with('success', 'Distribución registrada correctamente.');
 }
 
 

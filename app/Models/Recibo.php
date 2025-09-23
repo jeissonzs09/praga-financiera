@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Recibo extends Model
 {
-    protected $table = 'recibos';
+    protected $table = 'recibo_pagos';
     protected $primaryKey = 'id_recibo';
     public $timestamps = true;
 

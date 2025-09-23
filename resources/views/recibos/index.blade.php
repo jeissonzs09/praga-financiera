@@ -34,13 +34,14 @@
                 @forelse($recibos as $recibo)
                     <tr class="border-b hover:bg-gray-50">
                         <td class="px-3 py-2 border">{{ $recibo->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="px-3 py-2 border text-right">L. {{ number_format($recibo->monto_total, 2) }}</td>
+                        <td class="px-3 py-2 border text-right">L. {{ number_format($recibo->monto, 2) }}</td>
                         <td class="px-3 py-2 border">{{ $recibo->observaciones }}</td>
                         <td class="px-3 py-2 border text-center">
-                            <a href="{{ route('recibos.pdf', $recibo->id_recibo) }}"
+<a href="{{ route('recibos.pdf', $recibo->id) }}"
    class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded shadow text-sm inline-flex items-center gap-1">
     📄 <span>Generar recibo</span>
 </a>
+
                         </td>
                     </tr>
                 @empty

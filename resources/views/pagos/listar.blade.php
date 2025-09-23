@@ -12,7 +12,7 @@
     </div>
 
     <!-- Botón para regresar al plan de pago -->
-    <div class="mb-4 flex justify-end">
+    <div class="mb-4 text-right">
         <a href="{{ route('pagos.plan', $prestamo->id) }}"
            class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded shadow">
             ← Regresar al plan de pago
@@ -21,35 +21,34 @@
 
     <!-- Tabla de pagos -->
     <div class="overflow-x-auto bg-white rounded-lg shadow">
-        <table class="min-w-full text-sm text-gray-800">
-            <thead class="bg-blue-900 text-white text-sm uppercase">
+        <table class="min-w-full text-sm text-gray-800 border">
+            <thead class="bg-blue-900 text-white">
                 <tr>
-                    <th class="px-4 py-3 text-left">Fecha</th>
-                    <th class="px-4 py-3 text-left">Monto total</th>
-                    <th class="px-4 py-3 text-left">Observaciones</th>
-                    <th class="px-4 py-3 text-center">Acciones</th>
+                    <th class="px-3 py-2 border">Fecha</th>
+                    <th class="px-3 py-2 border text-right">Monto</th>
+                    <th class="px-3 py-2 border">Observaciones</th>
+                    <th class="px-3 py-2 border text-center">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200">
+            <tbody>
                 @forelse($recibos as $recibo)
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-4 py-2">{{ $recibo->created_at->format('d/m/Y H:i') }}</td>
-                        <td class="px-4 py-2">L. {{ number_format($recibo->monto_total, 2) }}</td>
-                        <td class="px-4 py-2">{{ $recibo->observaciones ?: '—' }}</td>
-                        <td class="px-4 py-2 text-center">
-                            <form action="{{ route('pagos.eliminarRecibo', $recibo->id_recibo) }}" method="POST" class="inline-block eliminar-form">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow text-sm">
-                                    Eliminar
-                                </button>
-                            </form>
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="px-3 py-2 border">{{ $recibo->created_at->format('d/m/Y H:i') }}</td>
+                        <td class="px-3 py-2 border text-right">L. {{ number_format($recibo->monto, 2) }}</td>
+                        <td class="px-3 py-2 border">{{ $recibo->observaciones ?: '—' }}</td>
+                        <td class="px-3 py-2 border text-center">
+                            <form action="{{ route('pagos.eliminarRecibo', $recibo->id) }}" method="POST" class="inline-block eliminar-form">
+    @csrf
+    @method('DELETE')
+    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded shadow text-sm">
+        Eliminar
+    </button>
+</form>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-4 py-4 text-center text-gray-500 italic">
+                        <td colspan="4" class="py-4 text-center text-gray-500 italic">
                             No hay pagos registrados para este préstamo.
                         </td>
                     </tr>
