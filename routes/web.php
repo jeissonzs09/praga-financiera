@@ -124,9 +124,9 @@ Route::post('/reportes/generar', [ReporteController::class, 'generarReporte'])->
 Route::get('/reportes/pagos/pdf', [ReporteController::class, 'exportarPDF'])->name('reportes.pdf');
 
 Route::post('/reportes/pagos/eliminar/{index}', [ReporteController::class, 'eliminarReporte'])->name('reportes.eliminar');
+Route::get('/pagos/calendario/{clienteId}', [PagoController::class, 'getCalendarioPagos']);
 
-
-
+Route::get('/calendario-pagos', [PagoController::class, 'getCalendarioPagos'])->name('calendario.pagos');
 
 
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.

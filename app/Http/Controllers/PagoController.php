@@ -616,5 +616,46 @@ public function guardarDistribucion(Request $request, $prestamoId)
                      ->with('success', 'Distribución registrada correctamente.');
 }
 
+public function getCalendarioPagos()
+{
+    // Traemos solo los préstamos activos
+    $prestamos = Prestamo::with('cliente')->where('estado', 'Activo')->get();
 
+    $dias = []; // agrupamos pagos por fecha
+
+    foreach ($prestamos as $prestamo) {
+        $cuotas = $this->generarPlanPagos($prestamo);
+
+        foreach ($cuotas as $cuota) {
+            $fechaPago = \Carbon\Carbon::parse($cuota['vence'])->format('Y-m-d');
+
+            if (!isset($dias[$fechaPago])) {
+                $dias[$fechaPago] = [
+                    'title' => 'Ver Pagos',
+                    'start' => $fechaPago,
+                    'allDay' => true,
+                    'color' => 'blue',
+                    'extendedProps' => ['pagos' => []]
+                ];
+            }
+
+            $dias[$fechaPago]['extendedProps']['pagos'][] = [
+                'cliente'  => $prestamo->cliente ? $prestamo->cliente->nombre_completo : 'Cliente Desconocido',
+                'capital'  => $cuota['capital'],
+                'interes'  => $cuota['interes'],
+                'total'    => $cuota['total'],
+                'estado'   => $cuota['estado'],
+                'es_tardio'=> $cuota['es_tardio']
+            ];
+
+            if (in_array($cuota['estado'], ['Vencida', 'Parcial']) || $cuota['es_tardio']) {
+                $dias[$fechaPago]['color'] = 'red';
+            }
+        }
+    }
+
+    $events = array_values($dias);
+
+    return response()->json($events);
+}
 }

@@ -7,7 +7,6 @@
 
     {{-- Tarjetas de resumen --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        
         {{-- Clientes --}}
         <a href="{{ route('clientes.index') }}" class="block">
             <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
@@ -46,29 +45,78 @@
         <div id="calendario" style="width: 100%; min-height: 500px;"></div>
     </div>
 
-    {{-- Gráfica de pagos por mes --}}
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-lg font-semibold mb-4">Pagos por mes ({{ now()->year }})</h2>
-        <canvas id="pagosMes"></canvas>
+    {{-- Modal Pagos --}}
+    <div id="modalPagos" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white w-full max-w-lg rounded-lg shadow-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Pagos del día</h2>
+            <ul id="listaPagos" class="space-y-2"></ul>
+            <div class="mt-4 flex justify-end">
+                <button onclick="cerrarModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Cerrar
+                </button>
+            </div>
+        </div>
     </div>
-
 </div>
 @endsection
 
 @section('scripts')
+<!-- FullCalendar -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/locales-all.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendario');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'es',
-        events: [
-    { title: 'Pago de Juan Pérez', start: '2025-09-02', color: '#3b82f6' },
-    { title: 'Pago de María López', start: '2025-09-10', color: '#22c55e' },
-    { title: 'Pago de Carlos Díaz', start: '2025-09-15', color: '#f59e0b' }
-],
-    });
-    calendar.render();
+    let calendarEl = document.getElementById('calendario');
+    let listaPagos = document.getElementById('listaPagos');
+    let modal = document.getElementById('modalPagos');
+
+    fetch('{{ route("calendario.pagos") }}')
+        .then(res => res.json())
+        .then(events => {
+            let calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                events: events,
+                eventContent: function(arg) {
+                    // Aquí reemplazamos el título por un botón
+                    let btn = document.createElement('button');
+                    btn.className = 'bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700';
+                    btn.innerText = 'Ver Pagos';
+                    btn.onclick = () => mostrarPagos(arg.event.extendedProps.pagos);
+
+                    return { domNodes: [btn] };
+                },
+                eventDidMount: function(info) {
+                    // Si algún pago está atrasado, coloreamos el fondo de rojo
+                    if (info.event.extendedProps.pagos.some(p => p.estado === 'Atrasado')) {
+                        info.el.style.backgroundColor = 'red';
+                        info.el.style.borderColor = 'darkred';
+                    }
+                }
+            });
+
+            calendar.render();
+        });
+
+    function mostrarPagos(pagos) {
+        listaPagos.innerHTML = '';
+        pagos.forEach(pago => {
+            let li = document.createElement('li');
+            li.className = 'flex justify-between items-center p-2 border rounded';
+            li.innerHTML = `
+                <span>${pago.cliente} - L. ${pago.total.toFixed(2)}</span>
+                <span class="${pago.estado === 'Atrasado' ? 'text-red-600 font-bold' : 'text-gray-600'}">${pago.estado}</span>
+            `;
+            listaPagos.appendChild(li);
+        });
+        modal.classList.remove('hidden');
+    }
+
+    window.cerrarModal = function() {
+        modal.classList.add('hidden');
+    };
 });
 </script>
 @endsection
