@@ -38,11 +38,11 @@
         Asimismo, si se me otorga una línea de crédito, quedo entendido(a) que mi información pasará a ser reportada a la Central de Riesgo mientras la deuda esté vigente y con saldo.
     </p>
 
-    <p>
-    Pespire, Choluteca, a los 
-    <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('d') }}</strong> días del mes de 
-    <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->translatedFormat('F') }}</strong> del año 
-    <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('Y') }}</strong>.
+<p>
+    Ciudad de: <strong>{{ $ciudadAutorizacion }}</strong>, Departamento de: <strong>{{ $departamentoAutorizacion }}</strong>, a los 
+    <strong>{{ \Carbon\Carbon::parse($fechaAutorizacion)->format('d') }}</strong> días del mes de 
+    <strong>{{ \Carbon\Carbon::parse($fechaAutorizacion)->translatedFormat('F') }}</strong> del año 
+    <strong>{{ \Carbon\Carbon::parse($fechaAutorizacion)->format('Y') }}</strong>.
 </p>
 
     {{-- 🔹 Firma --}}

@@ -12,27 +12,32 @@
             <p class="md:col-span-3"><strong>Motivo crédito:</strong> {{ $cliente->motivo_credito }}</p>
         </div>
     </div>
-
-    <!-- --- DATOS PERSONALES --- -->
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h3 class="text-lg font-semibold text-praga border-b pb-2 mb-4">Datos Personales</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <p><strong>Nombre:</strong> {{ $cliente->nombre_completo }}</p>
-            <p><strong>Fecha de nacimiento:</strong> {{ $cliente->fecha_nacimiento }}</p>
-            <p><strong>Edad:</strong> {{ $cliente->edad }}</p>
-            <p><strong>Nacionalidad:</strong> {{ $cliente->nacionalidad }}</p>
-            <p><strong>Celular:</strong> {{ $cliente->celular }}</p>
-            <p><strong>Teléfono residencia:</strong> {{ $cliente->telefono_residencia }}</p>
-            <p><strong>Identificación:</strong> {{ $cliente->identificacion }}</p>
-            <p><strong>Tipo de identificación:</strong> 
-                {{ is_array(json_decode($cliente->tipo_identificacion ?? '[]')) ? implode(', ', json_decode($cliente->tipo_identificacion ?? '[]')) : $cliente->tipo_identificacion }}
-            </p>
-            <p><strong>RTN:</strong> {{ $cliente->rtn }}</p>
-            <p><strong>Sexo:</strong> {{ $cliente->sexo }}</p>
-            <p><strong>Estado civil:</strong> {{ $cliente->estado_civil }}</p>
-            <p class="md:col-span-3"><strong>Dirección:</strong> {{ $cliente->direccion }}</p>
-        </div>
+<!-- --- DATOS PERSONALES --- -->
+<div class="bg-white p-6 rounded-lg shadow">
+    <h3 class="text-lg font-semibold text-praga border-b pb-2 mb-4">Datos Personales</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <p><strong>Nombre:</strong> {{ $cliente->nombre_completo }}</p>
+        <p><strong>Fecha de nacimiento:</strong> {{ $cliente->fecha_nacimiento }}</p>
+        <p><strong>Edad:</strong> {{ $cliente->edad }}</p>
+        <p><strong>Nacionalidad:</strong> {{ $cliente->nacionalidad }}</p>
+        <p><strong>Celular:</strong> {{ $cliente->celular }}</p>
+        <p><strong>Teléfono residencia:</strong> {{ $cliente->telefono_residencia }}</p>
+        <p><strong>Correo:</strong> {{ $cliente->correo }}</p>
+        <p><strong>Identificación:</strong> {{ $cliente->identificacion }}</p>
+        <p><strong>Tipo de identificación:</strong> 
+            {{ is_array(json_decode($cliente->tipo_identificacion ?? '[]')) ? implode(', ', json_decode($cliente->tipo_identificacion ?? '[]')) : $cliente->tipo_identificacion }}
+        </p>
+        <p><strong>RTN:</strong> {{ $cliente->rtn }}</p>
+        <p><strong>Sexo:</strong> {{ $cliente->sexo }}</p>
+        <p><strong>Estado civil:</strong> {{ $cliente->estado_civil }}</p>
+        <p><strong>Hijos:</strong> {{ $cliente->hijos }}</p>
+        <p><strong>Hijas:</strong> {{ $cliente->hijas }}</p>
+        <p><strong>Domicilio:</strong> {{ $cliente->domicilio }}</p>
+        <p><strong>Ciudad:</strong> {{ $cliente->ciudad }}</p>
+        <p><strong>Departamento:</strong> {{ $cliente->departamento }}</p>
+        <p class="md:col-span-3"><strong>Dirección Completa:</strong> {{ $cliente->direccion }}</p>
     </div>
+</div>
 
     <!-- --- DATOS DEL CÓNYUGE --- -->
     <div class="bg-white p-6 rounded-lg shadow">
@@ -44,35 +49,34 @@
         </div>
     </div>
 
-    <!-- --- INFORMACIÓN LABORAL --- -->
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h3 class="text-lg font-semibold text-praga border-b pb-2 mb-4">Información Laboral</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <p><strong>Correo:</strong> {{ $cliente->correo }}</p>
-            <p><strong>Hijos:</strong> {{ $cliente->hijos }}</p>
-            <p><strong>Hijas:</strong> {{ $cliente->hijas }}</p>
-            <p class="md:col-span-3"><strong>Profesión:</strong> {{ $cliente->profesion }}</p>
-            <p class="md:col-span-3"><strong>Negocio:</strong> {{ $cliente->negocio }}</p>
-            <p class="md:col-span-3"><strong>Actividad Económica:</strong> {{ $cliente->actividad_economica }}</p>
-            <p><strong>Cargo:</strong> {{ $cliente->cargo }}</p>
-            <p><strong>Tipo de labor:</strong> {{ $cliente->tipo_labor }}</p>
-            <p><strong>Empresa:</strong> {{ $cliente->empresa }}</p>
-            <p class="md:col-span-3"><strong>Dirección empresa:</strong> {{ $cliente->direccion_empresa }}</p>
-            <p><strong>Teléfono trabajo:</strong> {{ $cliente->telefono_trabajo }}</p>
-            <p><strong>Nivel de ingresos:</strong> 
-                {{ is_array(json_decode($cliente->nivel_ingreso ?? '[]')) ? implode(', ', json_decode($cliente->nivel_ingreso ?? '[]')) : $cliente->nivel_ingreso }}
-            </p>
-        </div>
+<!-- --- INFORMACIÓN LABORAL --- -->
+<div class="bg-white p-6 rounded-lg shadow">
+    <h3 class="text-lg font-semibold text-praga border-b pb-2 mb-4">Información Laboral</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <p class="md:col-span-3"><strong>Profesión:</strong> {{ $cliente->profesion }}</p>
+        <p class="md:col-span-3"><strong>Negocio:</strong> {{ $cliente->negocio }}</p>
+        <p class="md:col-span-3"><strong>Actividad Económica:</strong> {{ $cliente->actividad_economica }}</p>
+        <p><strong>Cargo:</strong> {{ $cliente->cargo }}</p>
+        <p><strong>Tipo de labor:</strong> {{ $cliente->tipo_labor }}</p>
+        <p><strong>Empresa:</strong> {{ $cliente->empresa }}</p>
+        <p class="md:col-span-3"><strong>Dirección empresa:</strong> {{ $cliente->direccion_empresa }}</p>
+        <p><strong>Teléfono trabajo:</strong> {{ $cliente->telefono_trabajo }}</p>
+        <p><strong>Nivel de ingresos:</strong> 
+            {{ is_array(json_decode($cliente->nivel_ingreso ?? '[]')) ? implode(', ', json_decode($cliente->nivel_ingreso ?? '[]')) : $cliente->nivel_ingreso }}
+        </p>
     </div>
+</div>
 
-    <!-- --- REFERENCIAS --- -->
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h3 class="text-lg font-semibold text-praga border-b pb-2 mb-4">Referencias</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <p><strong>Referencia 1:</strong> {{ $cliente->referencia1 }}</p>
-            <p><strong>Referencia 2:</strong> {{ $cliente->referencia2 }}</p>
-        </div>
+<!-- --- REFERENCIAS --- -->
+<div class="bg-white p-6 rounded-lg shadow">
+    <h3 class="text-lg font-semibold text-praga border-b pb-2 mb-4">Referencias</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <p><strong>Referencia 1 - Nombre:</strong> {{ $cliente->referencia1_nombre }}</p>
+        <p><strong>Referencia 1 - Teléfono:</strong> {{ $cliente->referencia1_telefono }}</p>
+        <p><strong>Referencia 2 - Nombre:</strong> {{ $cliente->referencia2_nombre }}</p>
+        <p><strong>Referencia 2 - Teléfono:</strong> {{ $cliente->referencia2_telefono }}</p>
     </div>
+</div>
 
     <!-- --- INGRESOS --- -->
     <div class="bg-white p-6 rounded-lg shadow">
@@ -132,16 +136,24 @@
     @endif
 
     <!-- Contrato PDF -->
-    @if($cliente->contrato_pdf)
+@if($cliente->contrato_pdf)
+    @php
+        $contratos = json_decode($cliente->contrato_pdf, true) ?: [];
+    @endphp
+
     <div>
         <h4 class="font-semibold mb-2">Contrato PDF</h4>
-        <div class="border rounded p-4 bg-gray-50 text-center">
-            <a href="{{ asset('storage/' . $cliente->contrato_pdf) }}" target="_blank" class="text-blue-600 hover:underline">
-                Ver Contrato PDF
-            </a>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @foreach($contratos as $archivo)
+                <div class="border rounded p-4 bg-gray-50 text-center">
+                    <a href="{{ asset('storage/' . $archivo) }}" target="_blank">
+                        {{ basename($archivo) }}
+                    </a>
+                </div>
+            @endforeach
         </div>
     </div>
-    @endif
+@endif
 </div>
 
     <!-- --- DECLARACIÓN --- -->

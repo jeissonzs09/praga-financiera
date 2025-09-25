@@ -30,6 +30,9 @@ class Cliente extends Model
         'estado_civil',
         'direccion',
         'telefono_residencia',
+        'domicilio',
+        'ciudad',
+        'departamento',
 
         // --- CÓNYUGE ---
         'conyuge_nombre',
@@ -50,8 +53,10 @@ class Cliente extends Model
         'telefono_trabajo',
 
         // --- REFERENCIAS ---
-        'referencia1',
-        'referencia2',
+        'referencia1_nombre',
+        'referencia1_telefono',
+        'referencia2_nombre',
+         'referencia2_telefono',
 
         // --- INGRESOS Y GARANTÍAS ---
         'ingresos',

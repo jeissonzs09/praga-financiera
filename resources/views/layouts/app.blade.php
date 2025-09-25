@@ -205,18 +205,11 @@
         <span>Registrar Pagos</span>
     </a>
 
-    <a href="#">
+    <a href="{{ route('refinanciamientos.index') }}">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 inline-block mr-2" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2L6 6v6c0 5.25 3.84 9.6 9 10 5.16-.4 9-4.75 9-10V6l-6-4zm0 2.18l4 2.67v4.32c0 4.08-2.97 7.63-6 7.95-3.03-.32-6-3.87-6-7.95V6.85l4-2.67zM11 11h2v4h-2v-4zm0 6h2v2h-2v-2z"/>
         </svg>
         Refinanciamientos
-    </a>
-
-    <a href="#">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 inline-block mr-2" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-9 8l-3-3 1.41-1.41L11 11.17l4.59-4.59L17 8l-6 6z"/>
-        </svg>
-        Condonaciones
     </a>
 
 <a href="{{ route('reportes.index') }}">

@@ -37,7 +37,7 @@
 <p>
     YO, <strong>{{ $prestamo->cliente->nombre_completo }}</strong>, comerciante, hondureño con  
     Documento Nacional de Identificación No. <strong>{{ $prestamo->cliente->identificacion }}</strong>, con domicilio  
-    en <strong>{{ $prestamo->cliente->direccion }}</strong>, de la ciudad de <strong>{{ $prestamo->cliente->ciudad }}</strong>, departamento de <strong>{{ $prestamo->cliente->departamento }}</strong>, declaro que debo y  
+    en <strong>{{ $prestamo->cliente->domicilio }}</strong>, de la ciudad de <strong>{{ $prestamo->cliente->ciudad }}</strong>, departamento de <strong>{{ $prestamo->cliente->departamento }}</strong>, declaro que debo y  
     PAGARÉ incondicionalmente la suma de <strong>{{ $letras }}</strong>  
     (LPS. <strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong>) a la orden de Inversiones Praga S.A. con registro tributario número  
     <strong>06119025150113</strong>, el día <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('d') }}</strong> del mes de <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->translatedFormat('F') }}</strong> del año <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('Y') }}</strong>.  
@@ -48,12 +48,12 @@
     para cualquier acción o procedimiento legal relacionado con este pagaré, sometiéndose a la competencia del Juzgado o Tribunal que destine el acreedor.
 </p>
 
-
 {{-- 🔹 Firma --}}
 <p>
-    Firmo el presente pagaré en la ciudad de <strong>Pespire</strong>, Departamento de <strong>Choluteca</strong>,  
-    a los <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('d') }}</strong> días del mes de <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->translatedFormat('F') }}</strong> del año <strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('Y') }}</strong>.
+    Firmo el presente pagaré en la ciudad de <strong>{{ $ciudadFirma }}</strong>, Departamento de <strong>{{ $departamentoFirma }}</strong>,  
+    a los <strong>{{ \Carbon\Carbon::parse($fechaFirma)->format('d') }}</strong> días del mes de <strong>{{ \Carbon\Carbon::parse($fechaFirma)->translatedFormat('F') }}</strong> del año <strong>{{ \Carbon\Carbon::parse($fechaFirma)->format('Y') }}</strong>.
 </p>
+
 
     <div class="firma">
     <p>_____________________________</p>

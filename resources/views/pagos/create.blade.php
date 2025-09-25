@@ -2,10 +2,8 @@
 
 @section('content')
 <div class="max-w-3xl mx-auto mt-10 bg-white shadow-md rounded-lg p-6 border border-gray-200">
-    <h2 class="text-2xl font-semibold text-praga mb-6 flex items-center justify-center">
-        <svg class="w-6 h-6 mr-2 text-praga" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M3 3v18h18V3H3zm3 3h12v12H6V6z"/>
-        </svg>
+    <h2 class="text-2xl font-semibold text-blue-600 mb-6 flex items-center justify-center">
+        <i class="fas fa-cash-register mr-2"></i>
         Registrar nuevo pago
     </h2>
 
@@ -16,14 +14,14 @@
         <div>
             <label for="monto" class="block text-sm font-medium text-gray-700">💰 Monto recibido</label>
             <input type="number" name="monto" id="monto" step="0.01" required
-                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-praga focus:ring-praga">
+                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600">
         </div>
 
         <!-- Método de pago -->
         <div>
             <label for="metodo_pago" class="block text-sm font-medium text-gray-700">💳 Método de pago</label>
             <select name="metodo_pago" id="metodo_pago" required
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-praga focus:ring-praga">
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600">
                 <option value="">Seleccione...</option>
                 <option value="Efectivo">Efectivo</option>
                 <option value="Transferencia">Transferencia</option>
@@ -34,14 +32,14 @@
         <div>
             <label for="observaciones" class="block text-sm font-medium text-gray-700">📝 Observaciones</label>
             <textarea name="observaciones" id="observaciones" rows="3"
-                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-praga focus:ring-praga"></textarea>
+                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-600 focus:ring-blue-600"></textarea>
         </div>
 
         <!-- Botón continuar -->
-        <div class="text-right">
+        <div class="flex justify-end">
             <button type="submit"
-                    class="inline-flex items-center bg-praga hover:bg-praga-dark text-white font-semibold px-6 py-2 rounded shadow">
-                ➡️ Continuar con distribución
+                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded shadow text-sm">
+                <i class="fas fa-check-circle"></i> Realizar Pago
             </button>
         </div>
     </form>

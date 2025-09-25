@@ -43,7 +43,8 @@
 <p>
 Nosotros, <strong>{{ $prestamo->cliente->nombre_completo }}</strong>, mayor de edad, estado civil <strong>{{ $prestamo->cliente->estado_civil }}</strong>, 
 profesión u oficio <strong>{{ $prestamo->cliente->profesion }}</strong>, nacionalidad hondureña y con domicilio en 
-<strong>{{ $prestamo->cliente->direccion }}</strong>, con Documento Nacional de Identidad No. 
+<strong>{{ $prestamo->cliente->domicilio }}</strong>, ciudad de <strong>{{ $prestamo->cliente->ciudad }}</strong>, 
+Departamento de <strong>{{ $prestamo->cliente->departamento }}</strong>, con Documento Nacional de Identidad No. 
 <strong>{{ $prestamo->cliente->identificacion }}</strong>, actuando en mi condición personal, quien en adelante se denominará EL DEUDOR; 
 y, <strong>DIEGO ENRIQUE SORIANO AGUILAR</strong>, mayor de edad, soltero, hondureño y de este domicilio, actuando en mi condición de 
 Gerente General de INVERSIONES PRAGA SOCIEDAD ANÓNIMA que en adelante se conocerá como EL ACREEDOR; 
@@ -52,22 +53,27 @@ hemos convenido en celebrar y como al efecto celebramos el presente CONTRATO DE 
 
 <p><strong>PRIMERO. Información:</strong> Declara EL DEUDOR, que previo a la suscripción del presente contrato ha recibido a su satisfacción por parte del acreedor, la información relacionada con el presente contrato de préstamo, intereses, comisiones pactadas, así como las consecuencias por el incumplimiento de la obligación.</p>
 
+@php
+    // Calcular cuota mensual según frecuencia real
+    $frecuencia = strtolower($prestamo->periodo); // <-- usamos 'periodo'
+    if ($frecuencia == 'semanal') {
+        $cuotaMensual = $montoCuota * 4; // 4 semanas en un mes
+    } elseif ($frecuencia == 'quincenal') {
+        $cuotaMensual = $montoCuota * 2; // 2 quincenas en un mes
+    } else {
+        $cuotaMensual = $montoCuota; // mensual
+    }
+@endphp
+
 <p>
 <strong>SEGUNDO. Plazo:</strong> Es entendido que el plazo de pago de la cantidad de 
 <strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong> Lempiras (Lps. 
 <strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong>) recibida en calidad de préstamo, será de 
 <strong>{{ $prestamo->plazo }}</strong> meses en cuotas de 
-<strong>L. {{
-    number_format(
-        // Ajuste según frecuencia
-        $prestamo->frecuencia == 'semanal' ? $montoCuota * 4 : 
-        ($prestamo->frecuencia == 'quincenal' ? $montoCuota * 2 : $montoCuota),
-        2
-    )
-}}</strong>; comenzando el 
-<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('d') }}</strong> de 
-<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->translatedFormat('F') }}</strong> de 
-<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('Y') }}</strong> al 
+<strong>L. {{ number_format($cuotaMensual, 2) }}</strong> MENSUAL; comenzando el 
+<strong>{{ \Carbon\Carbon::parse($fechaInicio)->format('d') }}</strong> de 
+<strong>{{ \Carbon\Carbon::parse($fechaInicio)->translatedFormat('F') }}</strong> de 
+<strong>{{ \Carbon\Carbon::parse($fechaInicio)->format('Y') }}</strong> al 
 <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('d') }}</strong> de 
 <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->translatedFormat('F') }}</strong> de 
 <strong>{{ \Carbon\Carbon::parse($fechaUltimaCuota)->format('Y') }}</strong> conforme al presente contrato y al plan de pago suscrito.
@@ -154,10 +160,10 @@ b) EL DEUDOR, desde ya, autoriza expresamente para que EL ACREEDOR proceda a rec
 </p>
 
 <p>
-En fe de lo cual se firma este contrato en la ciudad de <strong>Pespire</strong>, Departamento de Choluteca, a los 
-<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('d') }}</strong> días del mes de 
-<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->translatedFormat('F') }}</strong> del año 
-<strong>{{ \Carbon\Carbon::parse($prestamo->created_at)->format('Y') }}</strong>.
+En fe de lo cual se firma este contrato en la ciudad de <strong>{{ $ciudad }}</strong>, Departamento de <strong>{{ $departamento }}</strong>, a los 
+<strong>{{ $fechaFirma->format('d') }}</strong> días del mes de 
+<strong>{{ $fechaFirma->translatedFormat('F') }}</strong> del año 
+<strong>{{ $fechaFirma->format('Y') }}</strong>.
 </p>
 
 <br><br><br>

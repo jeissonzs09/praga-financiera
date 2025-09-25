@@ -93,6 +93,23 @@
         </select>
     </div>
 
+    
+<!-- DOMICILIO -->
+<div class="span-2">
+    <label class="block font-medium">Domicilio</label>
+    <input type="text" name="domicilio" class="w-full border rounded px-3 py-2">
+</div>
+<div>
+    <label class="block font-medium">Ciudad</label>
+    <input type="text" name="ciudad" class="w-full border rounded px-3 py-2">
+</div>
+<div>
+    <label class="block font-medium">Departamento</label>
+    <input type="text" name="departamento" class="w-full border rounded px-3 py-2">
+</div>
+
+    
+
     <!-- Tipo Identificación -->
     <div class="span-2">
         <label class="block font-medium">Tipo de Identificación</label>
@@ -137,30 +154,18 @@
     </div>
 </div>
 
+
 <!-- REFERENCIAS -->
 <h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Referencias</h3>
-<div id="referencias-container" class="space-y-3">
-    <div class="section-grid referencia-item">
-        <input type="text" name="referencias[0][nombre]" placeholder="Nombre de la referencia" class="border rounded px-3 py-2">
-        <input type="text" name="referencias[0][telefono]" placeholder="Teléfono" class="border rounded px-3 py-2">
-    </div>
+<div class="section-grid">
+    <input type="text" name="referencia1_nombre" placeholder="Referencia 1 - Nombre" class="border rounded px-3 py-2">
+    <input type="text" name="referencia1_telefono" placeholder="Referencia 1 - Teléfono" class="border rounded px-3 py-2">
 </div>
-<button type="button" id="add-referencia" class="mt-2 bg-green-600 text-white px-3 py-1 rounded">+ Agregar referencia</button>
+<div class="section-grid mt-2">
+    <input type="text" name="referencia2_nombre" placeholder="Referencia 2 - Nombre" class="border rounded px-3 py-2">
+    <input type="text" name="referencia2_telefono" placeholder="Referencia 2 - Teléfono" class="border rounded px-3 py-2">
+</div>
 
-<script>
-    let refIndex = 1;
-    document.getElementById('add-referencia').addEventListener('click', function () {
-        const container = document.getElementById('referencias-container');
-        const newRef = document.createElement('div');
-        newRef.classList.add('section-grid','referencia-item');
-        newRef.innerHTML = `
-            <input type="text" name="referencias[${refIndex}][nombre]" placeholder="Nombre de la referencia" class="border rounded px-3 py-2">
-            <input type="text" name="referencias[${refIndex}][telefono]" placeholder="Teléfono" class="border rounded px-3 py-2">
-        `;
-        container.appendChild(newRef);
-        refIndex++;
-    });
-</script>
 
 <!-- IDENTIDAD DEL CLIENTE -->
 <h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Identidad del Cliente</h3>
@@ -180,7 +185,7 @@
 <!-- SUBIDA DE CONTRATO EN PDF -->
 <h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Contrato</h3>
 <div class="space-y-2">
-    <input type="file" name="contrato_pdf" accept="application/pdf" class="w-full border rounded px-3 py-2">
+    <input type="file" name="contrato_pdf[]" accept="application/pdf" multiple class="w-full border rounded px-3 py-2">
     <small class="text-gray-500">Solo formato PDF.</small>
 </div>
         </div>

@@ -45,12 +45,19 @@
                         <td class="px-4 py-2">{{ $cliente->profesion }}</td>
                         <td class="px-4 py-2">{{ $cliente->negocio }}</td>
                         <td class="px-4 py-2">{{ $cliente->direccion }}</td>
-                        <td class="px-4 py-2 text-center">
-                            <a href="{{ route('clientes.show', $cliente->id_cliente) }}"
-                               class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow text-sm">
-                                Ver Detalle
-                            </a>
-                        </td>
+<td class="px-4 py-2 text-center flex justify-center gap-2">
+    <!-- Ver Detalle -->
+    <a href="{{ route('clientes.show', $cliente->id_cliente) }}"
+       class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow text-sm">
+        Ver Detalle
+    </a>
+
+    <!-- Editar -->
+    <a href="{{ route('clientes.edit', $cliente->id_cliente) }}"
+       class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded shadow text-sm">
+        Editar
+    </a>
+</td>
                     </tr>
                 @empty
                     <tr>

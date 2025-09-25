@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReciboController;
 use App\Http\Controllers\ContratoController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\RefinanciamientoController;
 
 
 Route::get('/', function () {
@@ -127,6 +128,33 @@ Route::post('/reportes/pagos/eliminar/{index}', [ReporteController::class, 'elim
 Route::get('/pagos/calendario/{clienteId}', [PagoController::class, 'getCalendarioPagos']);
 
 Route::get('/calendario-pagos', [PagoController::class, 'getCalendarioPagos'])->name('calendario.pagos');
+
+Route::prefix('refinanciamientos')->group(function () {
+    Route::get('/', [RefinanciamientoController::class, 'index'])->name('refinanciamientos.index');
+    Route::get('/{id}/create', [RefinanciamientoController::class, 'create'])->name('refinanciamientos.create');
+    Route::post('/', [RefinanciamientoController::class, 'store'])->name('refinanciamientos.store');
+});
+
+Route::get('/refinanciamientos', [RefinanciamientoController::class, 'index'])
+    ->name('refinanciamientos.index');
+
+    Route::get('/clientes/{id}/edit', [ClienteController::class, 'edit'])->name('clientes.edit');
+Route::put('/clientes/{id}', [ClienteController::class, 'update'])->name('clientes.update');
+
+Route::post('/contratos/{prestamo}/pdf-modal', [ContratoController::class, 'generarPdfModal'])->name('contratos.generarPdfModal');
+
+Route::post('/contratos/{prestamo}/pagare-modal', [ContratoController::class, 'generarPagareModal'])
+    ->name('contratos.generarPagareModal');
+
+    // Declaración desde modal
+Route::post('/contratos/{prestamo}/declaracion-modal', [ContratoController::class, 'generarDeclaracionModal'])
+    ->name('contratos.generarDeclaracionModal');
+
+    // Autorización desde modal
+Route::post('/contratos/{prestamo}/autorizacion-modal', [ContratoController::class, 'generarAutorizacionModal'])
+    ->name('contratos.generarAutorizacionModal');
+
+
 
 
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.
