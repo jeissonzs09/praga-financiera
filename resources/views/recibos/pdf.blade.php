@@ -28,7 +28,7 @@
             <div>INVERSIONES PRAGA</div>
             <div>Tegucigalpa, D.C.</div>
             <div>Registro Tributario: 08011998123917</div>
-            <div>CAI: {{ $cai }}</div>
+            <div>CAI:</div>
             <div>Rango autorizado: {{ $rangoAutorizado }}</div>
             <div>Fecha límite de emisión: {{ $fechaLimite }}</div>
         </div>
@@ -47,7 +47,7 @@
             </tr>
             <tr>
                 <td><strong>Préstamo:</strong> {{ 'PRG-' . str_pad($recibo->prestamo->id, 6, '0', STR_PAD_LEFT) }}</td>
-                <td><strong>Forma de pago:</strong> {{ $recibo->forma_pago ?? 'Efectivo' }}</td>
+               <td><strong>Forma de pago:</strong> {{ ucfirst($recibo->metodo_pago ?? 'Efectivo') }}</td>
             </tr>
         </table>
     </div>

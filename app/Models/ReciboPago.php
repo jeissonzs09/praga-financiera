@@ -28,5 +28,11 @@ class ReciboPago extends Model
     {
         return $this->belongsTo(Prestamo::class, 'prestamo_id');
     }
+
+    public function recibo()
+{
+    return $this->belongsTo(Recibo::class);
+}
+
 }
 

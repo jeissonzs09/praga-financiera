@@ -273,4 +273,13 @@ if($request->hasFile('contrato_pdf')){
     return redirect()->route('clientes.index')->with('success', 'Cliente actualizado correctamente.');
 }
 
+public function destroy($id)
+{
+    $cliente = Cliente::findOrFail($id);
+    $cliente->delete();
+
+    return redirect()->route('clientes.index')->with('success', 'Cliente eliminado correctamente.');
+}
+
+
 }

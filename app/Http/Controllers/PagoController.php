@@ -545,7 +545,7 @@ public function eliminarRecibo($idRecibo)
     // 3️⃣ Eliminar el recibo en sí
     $recibo->delete();
 
-    return back()->with('success', 'Recibo y sus pagos eliminados correctamente.');
+    return back()->with('success', 'Pago eliminado correctamente');
 }
 
 public function pdfPlanOriginal($prestamoId)
@@ -613,7 +613,7 @@ public function guardarDistribucion(Request $request, $prestamoId)
     }
 
     return redirect()->route('pagos.plan', $prestamo->id)
-                     ->with('success', 'Distribución registrada correctamente.');
+                     ->with('success', 'Pago Registrado Correctamente.');
 }
 
 public function getCalendarioPagos()

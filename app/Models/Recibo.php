@@ -25,4 +25,10 @@ class Recibo extends Model
     {
         return $this->belongsTo(Prestamo::class, 'prestamo_id', 'id');
     }
+
+public function recibo_pago()
+{
+    return $this->hasOne(ReciboPago::class, 'recibo_id');
+}
+
 }

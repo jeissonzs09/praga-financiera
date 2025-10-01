@@ -154,6 +154,8 @@ Route::post('/contratos/{prestamo}/declaracion-modal', [ContratoController::clas
 Route::post('/contratos/{prestamo}/autorizacion-modal', [ContratoController::class, 'generarAutorizacionModal'])
     ->name('contratos.generarAutorizacionModal');
 
+    Route::delete('/clientes/{id}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
+
 
 
 
