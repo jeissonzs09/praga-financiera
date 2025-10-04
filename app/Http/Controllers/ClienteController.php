@@ -172,6 +172,7 @@ public function update(Request $request, $id)
         'domicilio' => 'nullable|string|max:255',
         'ciudad' => 'nullable|string|max:100',
         'departamento' => 'nullable|string|max:100',
+        'direccion' => 'nullable|string|max:100',
         'hijos' => 'nullable|integer',
         'hijas' => 'nullable|integer',
 

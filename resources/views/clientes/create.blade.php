@@ -108,8 +108,12 @@
     <input type="text" name="departamento" class="w-full border rounded px-3 py-2">
 </div>
 
-    
+<div>
+    <label class="block font-medium">Direccion Exacta</label>
+    <input type="text" name="direccion" class="w-full border rounded px-3 py-2">
+</div>
 
+    
     <!-- Tipo Identificación -->
     <div class="span-2">
         <label class="block font-medium">Tipo de Identificación</label>

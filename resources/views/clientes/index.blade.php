@@ -24,7 +24,6 @@
     </div>
 @endif
 
-
     <!-- Buscador -->
     <div class="mb-4 flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4">
         <form action="{{ route('clientes.index') }}" method="GET" class="flex gap-2 w-full md:w-auto">
@@ -43,7 +42,7 @@
         </a>
     </div>
 
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
+    <div class="overflow-visible bg-white rounded-lg shadow">
         <table class="min-w-full text-sm text-gray-800">
             <thead class="bg-blue-900 text-white text-sm uppercase">
                 <tr>
@@ -64,38 +63,34 @@
                         <td class="px-4 py-2">{{ $cliente->negocio }}</td>
                         <td class="px-4 py-2">{{ $cliente->direccion }}</td>
                         <td class="px-4 py-2 text-center">
-                            <div x-data="{ open: false }" class="relative inline-block text-left">
-    <button @click="open = !open" 
-            class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded shadow text-sm inline-flex items-center gap-1">
-        ⚙️ Acciones
-        <span :class="{'rotate-180': open}" class="transition-transform duration-200">▾</span>
-    </button>
+                            <div class="relative inline-block text-left">
+                                <button type="button"
+                                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded shadow text-sm inline-flex items-center gap-1"
+                                        onclick="toggleMenu({{ $cliente->id_cliente }})">
+                                    ⚙️ Acciones
+                                    <span class="transition-transform duration-200">▾</span>
+                                </button>
 
-    <div x-show="open" @click.away="open = false"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         class="absolute z-10 mt-2 w-44 bg-white border border-gray-200 rounded shadow-xl">
-         
-        <a href="{{ route('clientes.show', $cliente->id_cliente) }}"
-           class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            👁️ Ver Detalle
-        </a>
-        <a href="{{ route('clientes.edit', $cliente->id_cliente) }}"
-           class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-            ✏️ Editar
-        </a>
-        <form action="{{ route('clientes.destroy', $cliente->id_cliente) }}" method="POST"
-              onsubmit="return confirm('¿Estás seguro de que deseas eliminar este cliente?')">
-            @csrf
-            @method('DELETE')
-            <button type="submit"
-                    class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                🗑️ Eliminar
-            </button>
-        </form>
-    </div>
-</div>
+                                <div id="menu-{{ $cliente->id_cliente }}" class="hidden absolute z-50 mt-2 w-44 bg-white border border-gray-200 rounded shadow-xl">
+                                    <a href="{{ route('clientes.show', $cliente->id_cliente) }}"
+                                       class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        👁️ Ver Detalle
+                                    </a>
+                                    <a href="{{ route('clientes.edit', $cliente->id_cliente) }}"
+                                       class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        ✏️ Editar
+                                    </a>
+                                    <form action="{{ route('clientes.destroy', $cliente->id_cliente) }}" method="POST"
+                                          onsubmit="return confirm('¿Estás seguro de que deseas eliminar este cliente?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                            🗑️ Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -109,4 +104,20 @@
         </table>
     </div>
 </div>
+
+{{-- 🔹 Script para desplegar menú --}}
+<script>
+    function toggleMenu(id) {
+        const menu = document.getElementById('menu-' + id);
+        menu.classList.toggle('hidden');
+    }
+
+    document.addEventListener('click', function (e) {
+        document.querySelectorAll('[id^="menu-"]').forEach(menu => {
+            if (!menu.contains(e.target) && !e.target.closest('button')) {
+                menu.classList.add('hidden');
+            }
+        });
+    });
+</script>
 @endsection

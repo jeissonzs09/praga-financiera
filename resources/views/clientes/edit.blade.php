@@ -103,6 +103,12 @@
                     <label class="block font-medium">Departamento</label>
                     <input type="text" name="departamento" value="{{ $cliente->departamento }}" class="w-full border rounded px-3 py-2">
                 </div>
+
+                <div>
+                    <label class="block font-medium">Direccion Exacta</label>
+                    <input type="text" name="departamento" value="{{ $cliente->direccion }}" class="w-full border rounded px-3 py-2">
+                </div>
+
                 <div class="span-2">
                     <label class="block font-medium">Estado civil</label>
                     <select name="estado_civil" class="w-full border rounded px-3 py-2">
