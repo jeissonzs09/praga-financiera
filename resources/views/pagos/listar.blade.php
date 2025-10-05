@@ -50,7 +50,7 @@
             <tbody>
                 @forelse($recibos as $recibo)
                     <tr class="border-b hover:bg-gray-50">
-                        <td class="px-3 py-2 border">{{ $recibo->created_at->format('d/m/Y H:i') }}</td>
+                        <td class="px-3 py-2 border">{{ \Carbon\Carbon::parse($recibo->fecha_pago)->format('d/m/Y') }}</td>
                         <td class="px-3 py-2 border text-right">L. {{ number_format($recibo->monto, 2) }}</td>
                         <td class="px-3 py-2 border">{{ $recibo->observaciones ?: '—' }}</td>
                         <td class="px-3 py-2 border text-center">

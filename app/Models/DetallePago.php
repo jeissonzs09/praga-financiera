@@ -19,6 +19,7 @@ class DetallePago extends Model
         'mora',
         'total',
         'id_recibo',
+        'fecha_pago',
     ];
 
     public function recibo()

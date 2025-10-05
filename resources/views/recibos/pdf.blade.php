@@ -43,7 +43,7 @@
         <table class="no-border">
             <tr>
                 <td><strong>Cliente:</strong> {{ $recibo->prestamo->cliente->nombre_completo }}</td>
-                <td><strong>Fecha:</strong> {{ $recibo->created_at->format('d/m/Y') }}</td>
+                <td><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($recibo->fecha_pago)->format('d/m/Y') }}</td>
             </tr>
             <tr>
                 <td><strong>Préstamo:</strong> {{ 'PRG-' . str_pad($recibo->prestamo->id, 6, '0', STR_PAD_LEFT) }}</td>

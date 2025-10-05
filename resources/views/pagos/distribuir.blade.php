@@ -67,6 +67,7 @@
         <input type="hidden" name="monto_total" value="{{ $monto }}">
         <input type="hidden" name="metodo_pago" value="{{ $metodo_pago }}">
         <input type="hidden" name="observaciones" value="{{ $observaciones }}">
+        <input type="hidden" name="fecha_pago" value="{{ $fecha_pago }}">
 
         <table class="min-w-full text-sm text-gray-800 border mb-4" id="tablaDistribucion">
             <thead class="bg-yellow-100 text-gray-700">

@@ -568,14 +568,17 @@ public function distribuir(Request $request, $prestamoId)
 {
     $prestamo = Prestamo::findOrFail($prestamoId);
 
+    // Aseguramos que fecha_pago siempre tenga un valor
+    $fechaPago = $request->input('fecha_pago') ?: now()->format('Y-m-d');
+
     return view('pagos.distribuir', [
         'prestamo'      => $prestamo,
         'monto'         => $request->monto,
         'metodo_pago'   => $request->metodo_pago,
         'observaciones' => $request->observaciones,
+        'fecha_pago'    => $fechaPago,
         'cuotas'        => $this->generarPlanPagos($prestamo),
     ]);
-
 }
 
 public function guardarDistribucion(Request $request, $prestamoId)
@@ -584,16 +587,19 @@ public function guardarDistribucion(Request $request, $prestamoId)
     $cuotas = $request->input('cuotas');
     $montoTotal = floatval($request->input('monto_total'));
 
-    // 🔹 Aquí registrás el recibo general
+    // 🔹 Asegurarse de tener la fecha de pago
+    $fechaPago = $request->input('fecha_pago') ?? now()->format('Y-m-d');
+
+    // 🔹 Crear recibo general
     $recibo = ReciboPago::create([
         'prestamo_id' => $prestamo->id,
         'monto' => $montoTotal,
         'metodo_pago' => $request->input('metodo_pago'),
         'observaciones' => $request->input('observaciones'),
-        'fecha_pago' => now(),
+        'fecha_pago' => $fechaPago,
     ]);
 
-    // 🔹 Luego registrás cada cuota afectada
+    // 🔹 Registrar cada cuota con la fecha correcta
     foreach ($cuotas as $nro => $datos) {
         $capital = floatval($datos['capital']);
         $interes = floatval($datos['interes']);
@@ -609,6 +615,7 @@ public function guardarDistribucion(Request $request, $prestamoId)
             'mora' => 0,
             'total' => $total,
             'id_recibo' => $recibo->id,
+            'fecha_pago' => $fechaPago, // <-- aquí se asegura que la fecha no se pierda
         ]);
     }
 
