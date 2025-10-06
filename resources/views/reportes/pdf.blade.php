@@ -36,36 +36,36 @@
                 <th>Total</th>
             </tr>
         </thead>
-        <tbody>
-            @php
-                $totalCapital = 0;
-                $totalInteres = 0;
-                $totalGeneral = 0;
-            @endphp
+<tbody>
+    @php
+        $totalCapital = 0;
+        $totalInteres = 0;
+        $totalGeneral = 0;
+    @endphp
 
-            @foreach($pagos as $pago)
-                @php
-                    $totalCapital += $pago->capital;
-                    $totalInteres += $pago->interes;
-                    $totalGeneral += $pago->capital + $pago->interes;
-                @endphp
-                <tr>
-                    <td class="cliente">{{ $pago->prestamo->cliente->nombre_completo }}</td>
-                    <td class="cuota">{{ $pago->cuota_numero }}</td>
-                    <td>L. {{ number_format($pago->capital, 2) }}</td>
-                    <td>L. {{ number_format($pago->interes, 2) }}</td>
-                    <td>L. {{ number_format($pago->capital + $pago->interes, 2) }}</td>
-                </tr>
-            @endforeach
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="2" style="text-align:center">Totales</td>
-                <td>L. {{ number_format($totalCapital, 2) }}</td>
-                <td>L. {{ number_format($totalInteres, 2) }}</td>
-                <td>L. {{ number_format($totalGeneral, 2) }}</td>
-            </tr>
-        </tfoot>
+    @foreach($pagos as $pago)
+        @php
+            $totalCapital += $pago->capital_total;
+            $totalInteres += $pago->interes_total;
+            $totalGeneral += $pago->total_general;
+        @endphp
+        <tr>
+            <td class="cliente">{{ $pago->cliente }}</td>
+            <td class="cuota">{{ $pago->numero_cuotas }}</td>
+            <td>L. {{ number_format($pago->capital_total, 2) }}</td>
+            <td>L. {{ number_format($pago->interes_total, 2) }}</td>
+            <td>L. {{ number_format($pago->total_general, 2) }}</td>
+        </tr>
+    @endforeach
+</tbody>
+<tfoot>
+    <tr>
+        <td colspan="2" style="text-align:center">Totales</td>
+        <td>L. {{ number_format($totalCapital, 2) }}</td>
+        <td>L. {{ number_format($totalInteres, 2) }}</td>
+        <td>L. {{ number_format($totalGeneral, 2) }}</td>
+    </tr>
+</tfoot>
     </table>
 </body>
 </html>

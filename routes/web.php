@@ -156,6 +156,12 @@ Route::post('/contratos/{prestamo}/autorizacion-modal', [ContratoController::cla
 
     Route::delete('/clientes/{id}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
 
+    Route::post('/reportes/creditos', [ReporteController::class, 'generarCreditos'])
+    ->name('reportes.generarCreditos');
+
+    Route::get('/reportes/creditos/excel', [ReporteController::class, 'exportExcelCreditos'])->name('reportes.excelCreditos');
+Route::get('/reportes/creditos/pdf', [ReporteController::class, 'generarReporteCreditosPDF'])->name('reportes.pdfCreditos');
+
 
 
 
