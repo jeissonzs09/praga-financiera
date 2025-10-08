@@ -2,6 +2,24 @@
 
 @section('content')
 <div class="p-4">
+
+@if(session('success'))
+    <div 
+        x-data="{ show: true }" 
+        x-init="setTimeout(() => show = false, 1500)" 
+        x-show="show"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-90"
+        x-transition:enter-end="opacity-100 scale-100"
+        class="fixed inset-0 flex items-center justify-center z-50"
+    >
+        <div class="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-5 rounded-2xl shadow-2xl text-center text-base md:text-lg font-semibold flex items-center gap-3 max-w-md w-full">
+            <span class="text-2xl">✅</span>
+            <span>{{ session('success') }}</span>
+        </div>
+    </div>
+@endif
+
     {{-- Título y datos del préstamo --}}
     <h1 class="text-xl font-bold mb-6 text-center">
         Recibos — {{ $prestamo->cliente->nombre_completo }}

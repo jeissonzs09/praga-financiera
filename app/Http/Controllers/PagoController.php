@@ -129,29 +129,25 @@ public function storePago(Request $request, $prestamoId)
         'metodo_pago'   => 'required|string',
         'observaciones' => 'nullable|string|max:255',
         'cuotas'        => 'nullable|array',
+        'fecha_pago'    => 'required|date',
     ]);
 
     $prestamo = Prestamo::with('pagos')->findOrFail($prestamoId);
     $cuotas = $this->generarPlan($prestamo);
 
-    // 🔹 Detectar primera cuota pendiente
-    $cuotaActual = collect($cuotas)->firstWhere('estado', 'Pendiente');
-    if (!$cuotaActual) {
-        return back()->with('error', 'No hay cuotas pendientes para este préstamo.');
+    $montoIngresado = floatval($request->monto);
+
+    // 🔹 Calcular total original pendiente
+    $totalPendiente = collect($cuotas)->sum(function($c) {
+        return $c['capital'] + $c['interes'];
+    });
+
+    if ($montoIngresado > $totalPendiente) {
+        return back()->with('error', 'El monto ingresado excede el total pendiente del préstamo.');
     }
 
-    $totalCuota = $cuotaActual['capital'] + $cuotaActual['interes'];
-    $montoIngresado = $request->input('monto');
-    $excedente = $montoIngresado - $totalCuota;
-
-    // 🔹 Validar suma distribuida por cuotas
-    $sumaDistribuida = 0;
-    foreach ($request->input('cuotas', []) as $datos) {
-        $sumaDistribuida += floatval($datos['capital'] ?? 0) + floatval($datos['interes'] ?? 0);
-    }
-
-    if ($excedente > 0 && $sumaDistribuida > $excedente) {
-        return back()->with('error', 'La suma distribuida excede el excedente disponible.');
+    if ($montoIngresado < $totalPendiente && empty($request->cuotas)) {
+        return back()->with('error', 'Debe distribuir todo el pago entre las cuotas.');
     }
 
     // 🔹 Crear recibo
@@ -160,51 +156,56 @@ public function storePago(Request $request, $prestamoId)
         'monto_total'   => $montoIngresado,
         'metodo_pago'   => $request->metodo_pago,
         'observaciones' => $request->observaciones,
+        'fecha'         => $request->fecha_pago,
     ]);
 
-    // 🔹 Registrar pago base
-    Pago::create([
-        'prestamo_id'   => $prestamo->id,
-        'cuota_numero'  => $cuotaActual['nro'],
-        'monto'         => $totalCuota,
-        'observaciones' => $request->observaciones,
-    ]);
+    $montoRestante = $montoIngresado;
 
-    DetallePago::create([
-        'id_recibo'     => $recibo->id_recibo,
-        'cuota_numero'  => $cuotaActual['nro'],
-        'capital'       => round($cuotaActual['capital'], 2),
-        'interes'       => round($cuotaActual['interes'], 2),
-        'recargo'       => 0,
-        'mora'          => 0,
-        'total'         => round($totalCuota, 2),
-    ]);
+    foreach ($cuotas as $cuota) {
+        if ($montoRestante <= 0) break;
 
-    // 🔹 Registrar distribución manual por cuotas
-    foreach ($request->input('cuotas', []) as $nro => $datos) {
-        $capital = floatval($datos['capital'] ?? 0);
-        $interes = floatval($datos['interes'] ?? 0);
-        $total = $capital + $interes;
+        $capital = $cuota['capital'];
+        $interes = $cuota['interes'];
+        $totalCuota = $capital + $interes;
+        $atrasada = $cuota['estado'] === 'Pendiente' && $cuota['fecha_vencimiento'] < now();
 
-        if ($total > 0) {
-            DetallePago::create([
-                'id_recibo'     => $recibo->id_recibo,
-                'cuota_numero'  => $nro,
-                'capital'       => round($capital, 2),
-                'interes'       => round($interes, 2),
-                'recargo'       => 0,
-                'mora'          => 0,
-                'total'         => round($total, 2),
-            ]);
+        if ($montoRestante >= $totalCuota) {
+            // Pago completo de la cuota
+            $detalleCapital = $capital;
+            $detalleInteres = $interes;
+            $excedente = $montoRestante - $totalCuota;
+        } else {
+            // Pago parcial
+            if ($atrasada) {
+                $detalleInteres = min($interes, $montoRestante);
+                $detalleCapital = max(0, $montoRestante - $detalleInteres);
+            } else {
+                $detalleCapital = min($capital, $montoRestante);
+                $detalleInteres = max(0, $montoRestante - $detalleCapital);
+            }
+            $excedente = 0;
         }
+
+        // 🔹 Guardar detalle de pago
+        DetallePago::create([
+            'id_recibo'     => $recibo->id_recibo,
+            'cuota_numero'  => $cuota['nro'],
+            'capital'       => round($detalleCapital, 2),
+            'interes'       => round($detalleInteres, 2),
+            'recargo'       => 0,
+            'mora'          => 0,
+            'total'         => round($detalleCapital + $detalleInteres, 2),
+            'fecha_pago'    => $request->fecha_pago,
+        ]);
+
+        $montoRestante -= ($detalleCapital + $detalleInteres);
     }
 
-    // 🔹 Verificar si préstamo está liquidado
-    $totalPagado = $prestamo->pagos()->sum('monto');
-    $totalOriginal = array_sum(array_column($cuotas, 'capital')) +
-                     array_sum(array_column($cuotas, 'interes'));
+    // 🔹 Actualizar estado del préstamo
+    $totalPagado = DetallePago::whereIn('id_recibo', Recibo::where('prestamo_id', $prestamo->id)->pluck('id_recibo'))
+                    ->sum('total');
 
-    if ($totalPagado >= $totalOriginal) {
+    if ($totalPagado >= $totalPendiente) {
         $prestamo->estado = 'Finalizado';
         $prestamo->save();
     }
@@ -212,7 +213,6 @@ public function storePago(Request $request, $prestamoId)
     return redirect()->route('pagos.plan', $prestamo->id)
         ->with('success', 'Pago registrado y aplicado correctamente.');
 }
-
 
 // Controlador para mostrar plan
 public function mostrarPlan($prestamoId)
@@ -619,8 +619,8 @@ public function guardarDistribucion(Request $request, $prestamoId)
         ]);
     }
 
-    return redirect()->route('pagos.plan', $prestamo->id)
-                     ->with('success', 'Pago Registrado Correctamente.');
+    return redirect()->route('recibos.index', $prestamo->id)
+                     ->with('success', 'Pago Registrado Correctamente');
 }
 
 public function getCalendarioPagos()

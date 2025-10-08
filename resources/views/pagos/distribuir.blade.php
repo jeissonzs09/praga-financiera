@@ -26,43 +26,41 @@
             </thead>
             <tbody>
                 @foreach($cuotas as $cuota)
-    @php
-        $vencida = \Carbon\Carbon::parse($cuota['vence'])->isPast();
-        if ($cuota['estado'] === 'Pagada' && ($cuota['es_tardio'] ?? false)) {
-            $clase = 'bg-red-100 text-red-800';
-        } elseif ($cuota['estado'] === 'Pagada') {
-            $clase = 'bg-green-100 text-green-800';
-        } elseif ($cuota['estado'] === 'Parcial') {
-            $clase = 'bg-yellow-100 text-yellow-800';
-        } elseif (in_array($cuota['estado'], ['Pendiente', 'Vencida']) && $vencida) {
-            $clase = 'bg-red-100 text-red-800';
-        } else {
-            $clase = '';
-        }
-    @endphp
-
-    <tr class="{{ $clase }}">
-        <td class="px-3 py-2 text-center">
-            <input type="checkbox" class="cuota-check"
-                   data-nro="{{ $cuota['nro'] }}"
-                   data-capital="{{ $cuota['capital'] }}"
-                   data-interes="{{ $cuota['interes'] }}"
-                   data-vence="{{ $cuota['vence'] }}">
-        </td>
-        <td class="px-3 py-2 text-center">{{ $cuota['nro'] }}</td>
-        <td class="px-3 py-2 text-center">{{ \Carbon\Carbon::parse($cuota['vence'])->format('d/m/Y') }}</td>
-        <td class="px-3 py-2 text-right">L. {{ number_format($cuota['capital'], 2) }}</td>
-        <td class="px-3 py-2 text-right">L. {{ number_format($cuota['interes'], 2) }}</td>
-        <td class="px-3 py-2 text-right font-bold">L. {{ number_format($cuota['capital'] + $cuota['interes'], 2) }}</td>
-    </tr>
-@endforeach
-
+                    @php
+                        $vencida = \Carbon\Carbon::parse($cuota['vence'])->isPast();
+                        if ($cuota['estado'] === 'Pagada' && ($cuota['es_tardio'] ?? false)) {
+                            $clase = 'bg-red-100 text-red-800';
+                        } elseif ($cuota['estado'] === 'Pagada') {
+                            $clase = 'bg-green-100 text-green-800';
+                        } elseif ($cuota['estado'] === 'Parcial') {
+                            $clase = 'bg-yellow-100 text-yellow-800';
+                        } elseif (in_array($cuota['estado'], ['Pendiente', 'Vencida']) && $vencida) {
+                            $clase = 'bg-red-100 text-red-800';
+                        } else {
+                            $clase = '';
+                        }
+                    @endphp
+                    <tr class="{{ $clase }}">
+                        <td class="px-3 py-2 text-center">
+                            <input type="checkbox" class="cuota-check"
+                                   data-nro="{{ $cuota['nro'] }}"
+                                   data-capital="{{ $cuota['capital'] }}"
+                                   data-interes="{{ $cuota['interes'] }}"
+                                   data-vence="{{ $cuota['vence'] }}">
+                        </td>
+                        <td class="px-3 py-2 text-center">{{ $cuota['nro'] }}</td>
+                        <td class="px-3 py-2 text-center">{{ \Carbon\Carbon::parse($cuota['vence'])->format('d/m/Y') }}</td>
+                        <td class="px-3 py-2 text-right">L. {{ number_format($cuota['capital'], 2) }}</td>
+                        <td class="px-3 py-2 text-right">L. {{ number_format($cuota['interes'], 2) }}</td>
+                        <td class="px-3 py-2 text-right font-bold">L. {{ number_format($cuota['capital'] + $cuota['interes'], 2) }}</td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
     </div>
 
     <!-- Tabla de distribución -->
-    <form action="{{ route('pagos.guardar', $prestamo->id) }}" method="POST">
+    <form action="{{ route('pagos.guardar', $prestamo->id) }}" method="POST" id="formDistribucion">
         @csrf
         <input type="hidden" name="monto_total" value="{{ $monto }}">
         <input type="hidden" name="metodo_pago" value="{{ $metodo_pago }}">
@@ -84,11 +82,6 @@
             <tbody></tbody>
         </table>
 
-        <p id="alertaExcedente" class="text-sm text-red-600 hidden">⚠️ La suma excede el monto disponible.</p>
-
-        <p id="alertaExcesoCuota" class="text-sm text-red-600 hidden">
-    ⚠️ El capital o interés asignado excede el valor original de la cuota seleccionada.
-</p>
         <!-- Totales finales -->
         <div class="mt-4 text-right font-semibold text-gray-700">
             <p>Total capital: L. <span id="totalCapital">0.00</span></p>
@@ -98,10 +91,10 @@
         </div>
 
         <div class="text-right mt-6">
-    <button type="submit"
-            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
-        💾 Guardar distribución
-    </button>
+            <button type="submit"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
+                💾 Guardar distribución
+            </button>
         </div>
     </form>
 </div>
@@ -111,54 +104,33 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const montoTotal = {{ $monto }};
-    let montoRestante = montoTotal;
     const tabla = document.querySelector('#tablaDistribucion tbody');
-    const alerta = document.getElementById('alertaExcedente');
+    const form = document.querySelector('#formDistribucion');
 
-    // Selección de cuotas
+    // Seleccionar cuotas
     document.querySelectorAll('.cuota-check').forEach(check => {
         check.addEventListener('change', function () {
             const nro = this.dataset.nro;
-            const capital = parseFloat(this.dataset.capital);
-            const interes = parseFloat(this.dataset.interes);
-            const vence = this.dataset.vence;
+            const capitalOriginal = parseFloat(this.dataset.capital);
+            const interesOriginal = parseFloat(this.dataset.interes);
 
             if (this.checked) {
-                recalcularMontoRestante();
-
-                let capitalAsignado = Math.min(capital, montoRestante);
-                let interesAsignado = Math.min(interes, montoRestante - capitalAsignado);
-                let recargo = 0;
-                let total = capitalAsignado + interesAsignado + recargo;
-
-                montoRestante -= total;
-
+                // Crear fila con valores iniciales
                 const row = document.createElement('tr');
-                row.setAttribute('id', 'cuota-' + nro);
+                row.id = 'cuota-' + nro;
                 row.innerHTML = `
-                    <td class="px-3 py-2 text-center">${nro}
-                        <input type="hidden" name="cuotas[${nro}][nro]" value="${nro}">
-                    </td>
-                    <td class="px-3 py-2 text-center">${vence}</td>
-                    <td class="px-3 py-2">
-                        <input type="number" step="0.01" name="cuotas[${nro}][capital]" value="${capitalAsignado}"
-                               class="w-full border rounded px-2 py-1 campo-distribucion">
-                    </td>
-                    <td class="px-3 py-2">
-                        <input type="number" step="0.01" name="cuotas[${nro}][interes]" value="${interesAsignado}"
-                               class="w-full border rounded px-2 py-1 campo-distribucion">
-                    </td>
-                    <td class="px-3 py-2">
-                        <input type="number" step="0.01" name="cuotas[${nro}][recargo]" value="${recargo}"
-                               class="w-full border rounded px-2 py-1 campo-distribucion">
-                    </td>
-                    <td class="px-3 py-2 font-bold text-right">L. <span class="total-cuota">${total.toFixed(2)}</span></td>
-                    <td class="px-3 py-2 text-center">
-                        <button type="button" class="btn-eliminar text-red-600 hover:text-red-800 font-bold" data-nro="${nro}">✖</button>
-                    </td>
+                    <td class="px-3 py-2 text-center">${nro}<input type="hidden" name="cuotas[${nro}][nro]" value="${nro}"></td>
+                    <td class="px-3 py-2 text-center">${this.dataset.vence}</td>
+                    <td class="px-3 py-2"><input type="number" step="0.01" name="cuotas[${nro}][capital]" value="${capitalOriginal.toFixed(2)}" class="w-full border rounded px-2 py-1 campo-distribucion"></td>
+                    <td class="px-3 py-2"><input type="number" step="0.01" name="cuotas[${nro}][interes]" value="${interesOriginal.toFixed(2)}" class="w-full border rounded px-2 py-1 campo-distribucion"></td>
+                    <td class="px-3 py-2"><input type="number" step="0.01" name="cuotas[${nro}][recargo]" value="0.00" class="w-full border rounded px-2 py-1 campo-distribucion"></td>
+                    <td class="px-3 py-2 font-bold text-right">L. <span class="total-cuota">${(capitalOriginal + interesOriginal).toFixed(2)}</span></td>
+                    <td class="px-3 py-2 text-center"><button type="button" class="btn-eliminar text-red-600 hover:text-red-800 font-bold" data-nro="${nro}">✖</button></td>
                 `;
                 tabla.appendChild(row);
                 activarEventosFila(row);
+                
+                // 🔹 Llamar a actualizarTotales para redistribuir excedentes correctamente
                 actualizarTotales();
             } else {
                 eliminarCuota(nro);
@@ -166,43 +138,28 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Eliminar cuota manualmente
-    tabla.addEventListener('click', function (e) {
-        if (e.target.classList.contains('btn-eliminar')) {
+    // Eliminar cuota
+    tabla.addEventListener('click', function(e){
+        if(e.target.classList.contains('btn-eliminar')){
             const nro = e.target.dataset.nro;
             eliminarCuota(nro);
         }
     });
 
-    function eliminarCuota(nro) {
+    function eliminarCuota(nro){
         const fila = document.getElementById('cuota-' + nro);
-        if (fila) fila.remove();
+        if(fila) fila.remove();
 
         const check = document.querySelector(`.cuota-check[data-nro="${nro}"]`);
-        if (check) check.checked = false;
+        if(check) check.checked = false;
 
-        recalcularMontoRestante();
         actualizarTotales();
     }
 
-        function recalcularMontoRestante() {
-        montoRestante = montoTotal;
-        document.querySelectorAll('#tablaDistribucion tbody tr').forEach(row => {
-            const capital = parseFloat(row.querySelector('input[name*="[capital]"]').value) || 0;
-            const interes = parseFloat(row.querySelector('input[name*="[interes]"]').value) || 0;
-            const recargo = parseFloat(row.querySelector('input[name*="[recargo]"]').value) || 0;
-            montoRestante -= (capital + interes + recargo);
-        });
-    }
-
-    function validarDistribucion() {
-        recalcularMontoRestante();
-        alerta.classList.toggle('hidden', montoRestante >= 0);
-    }
-
-    function actualizarTotales() {
+    // Actualizar totales y redistribuir excedente
+function actualizarTotales() {
     let totalCapital = 0, totalInteres = 0, totalRecargo = 0;
-    let excesoDetectado = false;
+    let montoRestante = montoTotal;
 
     document.querySelectorAll('#tablaDistribucion tbody tr').forEach(row => {
         const nro = row.querySelector('input[name*="[nro]"]').value;
@@ -210,45 +167,92 @@ document.addEventListener('DOMContentLoaded', function () {
         const interesInput = row.querySelector('input[name*="[interes]"]');
         const recargoInput = row.querySelector('input[name*="[recargo]"]');
 
-        const capital = parseFloat(capitalInput.value) || 0;
-        const interes = parseFloat(interesInput.value) || 0;
-        const recargo = parseFloat(recargoInput.value) || 0;
-        const total = capital + interes + recargo;
-
-        // Validar exceso por cuota
         const planCapital = parseFloat(document.querySelector(`.cuota-check[data-nro="${nro}"]`).dataset.capital);
         const planInteres = parseFloat(document.querySelector(`.cuota-check[data-nro="${nro}"]`).dataset.interes);
+        const vence = new Date(document.querySelector(`.cuota-check[data-nro="${nro}"]`).dataset.vence);
+        const vencida = vence < new Date();
 
-        if (capital > planCapital || interes > planInteres) {
-            excesoDetectado = true;
+        const recargo = parseFloat(recargoInput.value) || 0;
+
+        // Si no hay valor asignado por el usuario, calculamos automático
+        if (!row.dataset.asignado) {
+            let capitalAsignar = 0;
+            let interesAsignar = 0;
+
+            if (montoRestante > 0) {
+                if (vencida) {
+                    interesAsignar = Math.min(planInteres, montoRestante);
+                    montoRestante -= interesAsignar;
+
+                    if (montoRestante > 0) {
+                        capitalAsignar = Math.min(planCapital, montoRestante);
+                        montoRestante -= capitalAsignar;
+                    }
+                } else {
+                    capitalAsignar = Math.min(planCapital, montoRestante);
+                    montoRestante -= capitalAsignar;
+
+                    if (montoRestante > 0) {
+                        interesAsignar = Math.min(planInteres, montoRestante);
+                        montoRestante -= interesAsignar;
+                    }
+                }
+            }
+
+            capitalInput.value = capitalAsignar.toFixed(2);
+            interesInput.value = interesAsignar.toFixed(2);
+            row.dataset.asignado = true; // marcar como calculado
+        } else {
+            // Si el usuario ya editó, restamos lo que puso del monto restante
+            montoRestante -= parseFloat(capitalInput.value) + parseFloat(interesInput.value);
         }
 
         // Actualizar total por fila
-        row.querySelector('.total-cuota').textContent = total.toFixed(2);
+        const totalFila = parseFloat(capitalInput.value) + parseFloat(interesInput.value) + recargo;
+        row.querySelector('.total-cuota').textContent = totalFila.toFixed(2);
 
         // Acumular totales
-        totalCapital += capital;
-        totalInteres += interes;
+        totalCapital += parseFloat(capitalInput.value);
+        totalInteres += parseFloat(interesInput.value);
         totalRecargo += recargo;
     });
 
-    // Mostrar totales finales
+    // Mostrar totales
     document.getElementById('totalCapital').textContent = totalCapital.toFixed(2);
     document.getElementById('totalInteres').textContent = totalInteres.toFixed(2);
     document.getElementById('totalRecargo').textContent = totalRecargo.toFixed(2);
     document.getElementById('totalGeneral').textContent = (totalCapital + totalInteres + totalRecargo).toFixed(2);
-
-    // Mostrar alertas
-    document.getElementById('alertaExcesoCuota').classList.toggle('hidden', !excesoDetectado);
-    validarDistribucion();
 }
 
-    function activarEventosFila(row) {
-        row.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', () => {
-                actualizarTotales();
-            });
-        });
+function activarEventosFila(row){
+    row.querySelectorAll('input.campo-distribucion').forEach(input => {
+        input.addEventListener('input', actualizarTotales);
+    });
+}
+
+    // Validación final al presionar Guardar
+    form.addEventListener('submit', function(e){
+        const totalAplicado = parseFloat(document.getElementById('totalGeneral').textContent);
+        if(totalAplicado > montoTotal){
+            e.preventDefault();
+            mostrarAlerta("La cantidad excede el monto recibido");
+        } else if(totalAplicado < montoTotal){
+            e.preventDefault();
+            mostrarAlerta("Falta completar el pago");
+        }
+    });
+
+    function mostrarAlerta(mensaje){
+        const alertaExistente = document.getElementById('alertaPago');
+        if(alertaExistente) alertaExistente.remove();
+
+        const alerta = document.createElement('div');
+        alerta.id = "alertaPago";
+        alerta.className = "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-600 text-white px-6 py-4 rounded shadow-lg text-center text-lg z-50 animate-bounce";
+        alerta.innerHTML = `<strong>⚠️ ${mensaje}</strong>`;
+        document.body.appendChild(alerta);
+
+        setTimeout(() => alerta.remove(), 3000);
     }
 });
 </script>
