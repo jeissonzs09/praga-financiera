@@ -5,130 +5,176 @@
 @endphp
 
 @section('content')
-<div class="p-4">
+<style>
+    .prestamos-container {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 1rem;
+        height: calc(100vh - 2rem);
+    }
 
-@if(session('success'))
-    <div 
-        x-data="{ show: true }" 
-        x-init="setTimeout(() => show = false, 4000)" 
-        x-show="show"
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 scale-90"
-        x-transition:enter-end="opacity-100 scale-100"
-        class="fixed inset-0 flex items-center justify-center z-50"
-    >
-        <div class="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-5 rounded-2xl shadow-2xl text-center text-base md:text-lg font-semibold flex items-center gap-3 max-w-md w-full">
-            <span class="text-2xl">✅</span>
-            <span>{{ session('success') }}</span>
+/* Panel izquierdo */
+.clientes-panel {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1rem;
+    overflow: hidden; /* Evita que el scroll se corte */
+}
+
+    .top-controls {
+        flex: none;
+        margin-bottom: 0.5rem;
+    }
+
+/* Lista de clientes con scroll */
+.clientes-list-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    border-top: 1px solid #e5e7eb;
+    max-height: calc(100vh - 12rem); /* Ajusta según el alto de los controles superiores */
+}
+    .clientes-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .clientes-list li {
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .clientes-list li:hover,
+    .clientes-list li:focus,
+    .clientes-list li.selected {
+        background-color: #bfdbfe; /* azul claro */
+    }
+
+    /* Panel derecho */
+    .plan-panel {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 1rem;
+        overflow-y: auto;
+    }
+</style>
+
+<div class="prestamos-container">
+    {{-- 🔹 Panel izquierdo --}}
+    <div class="clientes-panel">
+        <div class="top-controls text-center">
+            <a href="{{ route('prestamos.create') }}"
+               class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
+                <i class="fas fa-plus-circle"></i> Nuevo Préstamo
+            </a>
+        </div>
+
+        <div class="top-controls">
+            <input type="text" id="buscarCliente" placeholder="Buscar cliente..."
+                   style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.25rem;">
+        </div>
+
+        <div class="clientes-list-wrapper">
+            <ul id="listaClientes" class="clientes-list">
+                @foreach ($prestamos->where('estado', 'Activo') as $prestamo)
+                    <li data-id="{{ $prestamo->id }}" tabindex="0">
+                        {{ $prestamo->cliente->nombre_completo }}
+                    </li>
+                @endforeach
+            </ul>
         </div>
     </div>
-@endif
 
-    <div class="mb-4 flex justify-end">
-        <a href="{{ route('prestamos.create') }}"
-           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
-            <i class="fas fa-plus-circle"></i> Nuevo Préstamo
-        </a>
-    </div>
-
-<form method="GET" action="{{ route('prestamos.index') }}" class="mb-4 flex flex-wrap gap-2 items-center">
-    <input type="text" name="buscar" value="{{ request('buscar') }}"
-           placeholder="Buscar por cliente"
-           class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-
-    <select name="estado" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-        <option value="">-- Todos los estados --</option>
-        <option value="Activo" {{ request('estado') === 'Activo' ? 'selected' : '' }}>Activo</option>
-        <option value="Finalizado" {{ request('estado') === 'Finalizado' ? 'selected' : '' }}>Finalizado</option>
-    </select>
-
-    {{-- 🔹 Nuevo campo para filtrar por fecha --}}
-    <input type="date" name="fecha" value="{{ request('fecha') }}"
-           class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-
-    <button type="submit"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
-        Filtrar
-    </button>
-</form>
-
-
-<div class="flex justify-end mb-2">
-    {{ $prestamos->links() }}
-</div>
-
-    <div class="overflow-x-auto bg-white rounded-lg shadow">
-        
-        <table class="min-w-full text-sm text-gray-800">
-            <thead class="bg-blue-900 text-white text-sm uppercase">
-                <tr>
-                    <th class="px-4 py-3 text-left">Cliente</th>
-                    <th class="px-4 py-3 text-left">Tipo Préstamo</th>
-                    <th class="px-4 py-3 text-left">Tipo Interés</th>
-                    <th class="px-4 py-3 text-left">Monto</th>
-                    <th class="px-4 py-3 text-left">Interés (%)</th>
-                    <th class="px-4 py-3 text-left">Plazo</th>
-                    <th class="px-4 py-3 text-left">Periodo</th>
-                    <th class="px-4 py-3 text-left">Fecha</th>
-                    <th class="px-4 py-3 text-left">Estado</th>
-                    <th class="px-4 py-3 text-center">Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                @forelse($prestamos as $prestamo)
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-4 py-2">{{ $prestamo->cliente->nombre_completo }}</td>
-                        <td class="px-4 py-2">{{ $prestamo->tipo_prestamo }}</td>
-                        <td class="px-4 py-2">{{ $prestamo->tipo_interes }}</td>
-                        <td class="px-4 py-2">L. {{ number_format($prestamo->valor_prestamo, 2) }}</td>
-                        <td class="px-4 py-2">{{ $prestamo->porcentaje_interes }}%</td>
-                        <td class="px-4 py-2">{{ $prestamo->plazo }} meses</td>
-                        <td class="px-4 py-2">{{ $prestamo->periodo }}</td>
-                        <td class="px-4 py-2">{{ $prestamo->fecha_inicio}}</td>
-                        <td class="px-4 py-2">
-                            @if(strtolower($prestamo->estado) === 'activo')
-                                <span class="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-800">
-                                    {{ ucfirst($prestamo->estado) }}
-                                </span>
-                            @else
-                                <span class="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-800">
-                                    {{ ucfirst($prestamo->estado) }}
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-2 text-center space-x-1">
-    <!-- Botón Plan -->
-    <a href="{{ route('pagos.plan', $prestamo->id) }}" 
-       class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-xs">
-        <i class="fas fa-list"></i> Plan
-    </a>
-
-    <!-- Botón Eliminar (solo si NO está finalizado) -->
-    @if(strtolower($prestamo->estado) !== 'finalizado')
-        <form action="{{ route('prestamos.destroy', $prestamo->id) }}" 
-              method="POST" 
-              class="inline-block"
-              onsubmit="return confirm('¿Seguro que deseas eliminar este préstamo? Esta acción no se puede deshacer.')">
-            @csrf
-            @method('DELETE')
-            <button type="submit" 
-                    class="inline-flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs">
-                <i class="fas fa-trash-alt"></i> Eliminar
-            </button>
-        </form>
-    @endif
-</td>
-
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="10" class="px-4 py-4 text-center text-gray-500 italic">
-                            No hay préstamos activos registrados.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+    {{-- 🔹 Panel derecho --}}
+    <div id="planContainer" class="plan-panel">
+        <p style="text-align:center; color:#6b7280; font-style:italic;">
+            Selecciona un cliente para ver su plan de pago
+        </p>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const buscarInput = document.getElementById('buscarCliente');
+    const lista = document.getElementById('listaClientes');
+    const planContainer = document.getElementById('planContainer');
+
+    const allItems = Array.from(lista.querySelectorAll('li')); // 🔹 Lista completa
+    let items = [...allItems]; // 🔹 Copia activa
+    let selectedIndex = -1;
+
+    // Filtro dinámico
+    buscarInput.addEventListener('input', e => {
+        const filtro = e.target.value.toLowerCase();
+        allItems.forEach(li => {
+            li.style.display = li.textContent.toLowerCase().includes(filtro) ? '' : 'none';
+        });
+        items = allItems.filter(li => li.style.display !== 'none'); // 🔄 Reconstruye items
+        selectedIndex = -1;
+    });
+
+    // Click para seleccionar cliente
+    lista.addEventListener('click', e => {
+        if (e.target.closest('li')) {
+            seleccionar(e.target.closest('li'));
+        }
+    });
+
+    // Flechas
+    document.addEventListener('keydown', e => {
+        const visibles = items.filter(li => li.style.display !== 'none');
+        if (!visibles.length) return;
+
+        if (e.key === 'ArrowDown') {
+            selectedIndex = Math.min(selectedIndex + 1, visibles.length - 1);
+            seleccionar(visibles[selectedIndex]);
+        } else if (e.key === 'ArrowUp') {
+            selectedIndex = Math.max(selectedIndex - 1, 0);
+            seleccionar(visibles[selectedIndex]);
+        }
+    });
+
+    function seleccionar(li) {
+        items.forEach(i => i.classList.remove('selected'));
+        li.classList.add('selected');
+        li.scrollIntoView({ block: 'nearest' });
+        cargarPlan(li.dataset.id);
+    }
+
+    async function cargarPlan(id) {
+        const estadoSelect = document.getElementById('filtroEstado');
+        const estado = estadoSelect?.value || 'Todas';
+
+        planContainer.innerHTML = '<p style="text-align:center; color:#9ca3af; font-style:italic;">Cargando...</p>';
+        const response = await fetch(`/prestamos/${id}/plan?estado=${estado}`);
+        const html = await response.text();
+        planContainer.innerHTML = html;
+
+        const eliminarBtn = document.createElement('div');
+        eliminarBtn.style.textAlign = 'center';
+        eliminarBtn.style.marginTop = '1rem';
+        eliminarBtn.innerHTML = `
+            <form action="/prestamos/${id}" method="POST"
+                  onsubmit="return confirm('¿Seguro que deseas eliminar este préstamo? Esta acción no se puede deshacer.');">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                        style="background-color:#dc2626; color:white; padding:0.5rem 1rem; border-radius:0.25rem; border:none; cursor:pointer;">
+                    <i class="fas fa-trash-alt"></i> Eliminar Préstamo
+                </button>
+            </form>
+        `;
+        planContainer.appendChild(eliminarBtn);
+
+        const selectEstado = document.getElementById('filtroEstado');
+        if (selectEstado) selectEstado.addEventListener('change', () => cargarPlan(id));
+    }
+});
+</script>
 @endsection

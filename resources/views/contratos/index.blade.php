@@ -4,26 +4,22 @@
 <div class="p-4">
     <h1 class="text-xl font-bold mb-4">Listado de Contratos</h1>
 
-    {{-- 🔹 Filtros --}}
-    <form method="GET" action="{{ route('contratos.index') }}" class="mb-4 flex flex-wrap gap-2 items-center">
-        <input type="text" name="buscar" value="{{ request('buscar') }}"
-               placeholder="Buscar por cliente"
-               class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+{{-- 🔹 Filtros dinámicos --}}
+<div class="mb-4 flex flex-wrap gap-2 items-center">
+    <input type="text" id="buscar" name="buscar" value="{{ request('buscar') }}"
+           placeholder="Buscar por cliente..."
+           class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
 
-        <select name="estado" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-            <option value="">-- Todos los estados --</option>
-            <option value="Activo" {{ request('estado') === 'Activo' ? 'selected' : '' }}>Activo</option>
-            <option value="Finalizado" {{ request('estado') === 'Finalizado' ? 'selected' : '' }}>Finalizado</option>
-        </select>
+    <select id="estado" name="estado"
+            class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+        <option value="">-- Todos los estados --</option>
+        <option value="Activo" {{ request('estado') === 'Activo' ? 'selected' : '' }}>Activo</option>
+        <option value="Finalizado" {{ request('estado') === 'Finalizado' ? 'selected' : '' }}>Finalizado</option>
+    </select>
 
-        <input type="date" name="fecha" value="{{ request('fecha') }}"
-               class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-
-        <button type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
-            Filtrar
-        </button>
-    </form>
+    <input type="date" id="fecha" name="fecha" value="{{ request('fecha') }}"
+           class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+</div>
 
     {{-- 🔹 Paginación arriba --}}
     <div class="flex justify-end mb-2">
@@ -45,7 +41,7 @@
                 <th class="px-4 py-2">Acciones</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="contratos-body">
             @foreach($contratos as $prestamo)
                 <tr class="border-b">
                     <td class="px-4 py-2">{{ $prestamo->cliente->nombre_completo }}</td>
@@ -333,6 +329,41 @@ function toggleModalDeclaracion(open = true) {
 
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const buscarInput = document.getElementById('buscar');
+    const estadoSelect = document.getElementById('estado');
+    const fechaInput = document.getElementById('fecha');
+    const tbody = document.getElementById('contratos-body');
 
+    function filtrarContratos() {
+        const buscar = buscarInput.value;
+        const estado = estadoSelect.value;
+        const fecha = fechaInput.value;
+
+        const url = new URL(`{{ route('contratos.index') }}`);
+        if (buscar) url.searchParams.append('buscar', buscar);
+        if (estado) url.searchParams.append('estado', estado);
+        if (fecha) url.searchParams.append('fecha', fecha);
+
+        fetch(url)
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTbody = doc.querySelector('#contratos-body');
+                const pagination = doc.querySelector('.mt-4');
+
+                if (newTbody) tbody.innerHTML = newTbody.innerHTML;
+                if (pagination) document.querySelector('.mt-4').innerHTML = pagination.innerHTML;
+            })
+            .catch(err => console.error('Error al filtrar:', err));
+    }
+
+    buscarInput.addEventListener('keyup', filtrarContratos);
+    estadoSelect.addEventListener('change', filtrarContratos);
+    fechaInput.addEventListener('change', filtrarContratos);
+});
+</script>
 
 @endsection

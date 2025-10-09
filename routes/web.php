@@ -162,8 +162,10 @@ Route::post('/contratos/{prestamo}/autorizacion-modal', [ContratoController::cla
     Route::get('/reportes/creditos/excel', [ReporteController::class, 'exportExcelCreditos'])->name('reportes.excelCreditos');
 Route::get('/reportes/creditos/pdf', [ReporteController::class, 'generarReporteCreditosPDF'])->name('reportes.pdfCreditos');
 
+Route::get('/prestamos/{id}/plan', [PagoController::class, 'mostrarPlanAjax'])->name('prestamos.plan.ajax');
 
-
+Route::get('/prestamos/{id}/estado-cuenta', [PagoController::class, 'descargarEstadoCuentaPDF'])
+     ->name('pagos.estado.cuenta.pdf');
 
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.
 //require __DIR__.'/auth.php';

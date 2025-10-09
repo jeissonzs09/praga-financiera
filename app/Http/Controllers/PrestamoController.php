@@ -30,7 +30,7 @@ public function index(Request $request)
         $query->whereDate('fecha_inicio', $request->fecha);
     }
 
-    $prestamos = $query->paginate(10);
+    $prestamos = $query->get();
 
     return view('prestamos.index', compact('prestamos'));
 }

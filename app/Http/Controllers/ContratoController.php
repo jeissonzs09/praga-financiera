@@ -7,6 +7,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\NumeroHelper;
 use Illuminate\Http\Request;
 
+
 class ContratoController extends Controller
 {
     public function index()
@@ -100,39 +101,36 @@ class ContratoController extends Controller
 
 public function generarPdf(Prestamo $prestamo)
 {
-         // 🔹 Asegurarte de que las fechas salgan en español
     setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'spanish');
     \Carbon\Carbon::setLocale('es');
     $prestamo->load('cliente');
 
-$plan = $this->generarPlan($prestamo);
+    $plan = $this->generarPlan($prestamo);
 
-// Tomar la primera cuota del plan
-$primerCuota = $plan[0]['total'];
-$montoCuota = $plan[0]['total'];
+    // Tomar la primera cuota del plan
+    $primerCuota = $plan[0]['total'];
+    $frecuencia = strtolower($prestamo->periodo);
+    $cuotaMensual = match($frecuencia) {
+        'semanal'   => $primerCuota * 4,
+        'quincenal' => $primerCuota * 2,
+        default     => $primerCuota,
+    };
 
-// Calcular cuota mensual según frecuencia
-$frecuencia = strtolower($prestamo->periodo);
-$cuotaMensual = match($frecuencia) {
-    'semanal'   => $primerCuota * 4,
-    'quincenal' => $primerCuota * 2,
-    default     => $primerCuota,
-};
+    $fechaPrimeraCuota = $plan[0]['vence'];
+    $fechaUltimaCuota  = end($plan)['vence'];
 
-$fechaPrimeraCuota = $plan[0]['vence'];
-$fechaUltimaCuota  = end($plan)['vence'];
+    // 🔹 Convertir a letras
+    $montoTotalLetras = NumeroHelper::convertirALetras($prestamo->valor_prestamo);
+    $cuotaMensualLetras = NumeroHelper::convertirALetras($cuotaMensual);
 
-// Pasar $cuotaMensual a la vista en lugar de $montoCuota
-
-\Carbon\Carbon::setLocale('es');
-
-$pdf = Pdf::loadView('contratos.plantilla', compact(
-    'prestamo',
-    'cuotaMensual',
-    'fechaPrimeraCuota',
-    'fechaUltimaCuota',
-    'montoCuota'
-))->setPaper('letter');
+    $pdf = Pdf::loadView('contratos.plantilla', compact(
+        'prestamo',
+        'cuotaMensual',
+        'cuotaMensualLetras',
+        'fechaPrimeraCuota',
+        'fechaUltimaCuota',
+        'montoTotalLetras'
+    ))->setPaper('letter');
 
     return $pdf->download("Contrato-Prestamo-{$prestamo->id}.pdf");
 }
@@ -195,42 +193,46 @@ public function generarAutorizacion(Prestamo $prestamo)
 
 public function generarPdfModal(Request $request, Prestamo $prestamo)
 {
-    // 🔹 Configurar idioma español
-    setlocale(LC_TIME, 'es_ES.UTF-8', 'es_ES', 'spanish');
     \Carbon\Carbon::setLocale('es');
 
-    // 🔹 Validación del modal
-    $request->validate([
+    // Validar datos del modal
+    $data = $request->validate([
         'fecha_inicio' => 'required|date',
         'ciudad'       => 'required|string',
         'departamento' => 'required|string',
         'fecha_firma'  => 'required|date',
     ]);
 
+    // Cargar relación cliente
     $prestamo->load('cliente');
+
+    // Generar plan de cuotas
     $plan = $this->generarPlan($prestamo);
 
     $montoCuota      = $plan[0]['total'] ?? 0;
     $fechaUltimaCuota = end($plan)['vence'] ?? now();
 
-    $fechaInicio  = $request->fecha_inicio;
-    $ciudad       = $request->ciudad;
-    $departamento = $request->departamento;
-    $fechaFirma   = \Carbon\Carbon::parse($request->fecha_firma);
+    // Convertir montos a letras
+    $montoTotalLetras   = NumeroHelper::convertirALetras($prestamo->valor_prestamo);
+    $cuotaMensualLetras = NumeroHelper::convertirALetras($montoCuota);
 
-    $pdf = Pdf::loadView('contratos.plantilla', compact(
-        'prestamo',
-        'montoCuota',
-        'fechaInicio',
-        'fechaUltimaCuota',
-        'ciudad',
-        'departamento',
-        'fechaFirma'
-    ))->setPaper('letter');
+    // Convertir fechaFirma a Carbon
+    $fechaFirma = \Carbon\Carbon::parse($data['fecha_firma']);
 
-    // 🔹 Descargar PDF con nombre personalizado
+    $pdf = Pdf::loadView('contratos.plantilla', [
+        'prestamo' => $prestamo,
+        'montoCuota' => $montoCuota,
+        'cuotaMensualLetras' => $cuotaMensualLetras,
+        'montoTotalLetras' => $montoTotalLetras,
+        'fechaInicio' => $data['fecha_inicio'],
+        'fechaUltimaCuota' => $fechaUltimaCuota,
+        'ciudad' => $data['ciudad'],
+        'departamento' => $data['departamento'],
+        'fechaFirma' => $fechaFirma,
+    ])->setPaper('letter');
+
     return $pdf->download(
-        "Contrato de Prestamo PRAGA - {$prestamo->cliente->nombre_completo} - {$fechaFirma->format('d-m-Y')}.pdf"
+        "Contrato PRAGA - {$prestamo->cliente->nombre_completo} - {$fechaFirma->format('d-m-Y')}.pdf"
     );
 }
 

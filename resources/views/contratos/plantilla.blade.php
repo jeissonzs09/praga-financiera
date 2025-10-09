@@ -67,8 +67,7 @@ hemos convenido en celebrar y como al efecto celebramos el presente CONTRATO DE 
 
 <p>
 <strong>SEGUNDO. Plazo:</strong> Es entendido que el plazo de pago de la cantidad de 
-<strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong> Lempiras (Lps. 
-<strong>{{ number_format($prestamo->valor_prestamo, 2) }}</strong>) recibida en calidad de préstamo, será de 
+<strong>L. {{ number_format($prestamo->valor_prestamo, 2) }}</strong> (<strong>{{ $montoTotalLetras }}</strong>) recibida en calidad de préstamo, será de 
 <strong>{{ $prestamo->plazo }}</strong> meses en cuotas de 
 <strong>L. {{ number_format($cuotaMensual, 2) }}</strong> MENSUAL; comenzando el 
 <strong>{{ \Carbon\Carbon::parse($fechaInicio)->format('d') }}</strong> de 

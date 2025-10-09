@@ -4,11 +4,30 @@
 <div class="max-w-5xl mx-auto mt-10 bg-white shadow-md rounded-lg p-6 border border-gray-200">
     <h2 class="text-2xl font-semibold text-praga mb-6 text-center">🧮 Distribuir pago recibido</h2>
 
+        <p class="text-center mb-6 text-gray-700">
+        Cliente: <strong>{{ $prestamo->cliente->nombre_completo }}</strong>
+    </p>
+
     <!-- Monto recibido -->
     <div class="mb-4 text-center">
         <p class="text-lg font-bold">Monto recibido: <span class="text-praga">L. {{ number_format($monto, 2) }}</span></p>
         <p class="text-sm text-gray-600">Método: {{ $metodo_pago }} | Observaciones: {{ $observaciones ?? '—' }}</p>
     </div>
+
+<!-- Botones Salir y Atrás -->
+<div class="flex justify-start mb-4 gap-2">
+    <!-- Salir -->
+    <a href="{{ route('pagos.index') }}"
+       class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow text-sm">
+        ❌ Salir
+    </a>
+
+    <!-- Atrás -->
+    <a href="{{ route('pagos.create', $prestamo->id) }}"
+       class="inline-flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow text-sm">
+        ⬅️ Atrás
+    </a>
+</div>
 
     <!-- Plan de cuotas -->
     <div class="mb-6">
