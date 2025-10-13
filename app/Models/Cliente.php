@@ -62,6 +62,7 @@ class Cliente extends Model
         'ingresos',
         'nivel_ingreso',
         'garantia',
+        'ingreso_mensual',
 
         // --- ARCHIVOS ---
         'identidad_img',
@@ -70,6 +71,7 @@ class Cliente extends Model
 
         // --- DECLARACIÓN ---
         'declaracion',
+
     ];
 
     // Relación con préstamos

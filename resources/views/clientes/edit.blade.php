@@ -214,17 +214,15 @@
                 @endforeach
             </div>
 
-            <!-- NIVEL DE INGRESOS -->
-            <h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Nivel de Ingreso Aproximado</h3>
-            <div class="section-grid">
-                @foreach(['0-3','4-6','7-10','11-20','21-50','50 en adelante'] as $rango)
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" name="nivel_ingreso[]" value="{{ $rango }}" class="mr-2"
-                               {{ in_array($rango, (array) $cliente->nivel_ingreso ?? []) ? 'checked' : '' }}>
-                        {{ $rango }}
-                    </label>
-                @endforeach
-            </div>
+<!-- NIVEL DE INGRESOS (REEMPLAZADO POR INGRESO MENSUAL) -->
+<h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Ingreso Mensual Aproximado (L.)</h3>
+<div class="section-grid">
+    <div class="span-2">
+        <label class="block font-medium">Salario Mensual</label>
+        <input type="number" name="ingreso_mensual" min="0" step="0.01" placeholder="Lps." 
+               value="{{ $cliente->ingreso_mensual }}" class="w-full border rounded px-3 py-2">
+    </div>
+</div>
 
             <!-- DESCRIPCIÓN DE GARANTÍAS -->
             <h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Descripción de Garantías</h3>

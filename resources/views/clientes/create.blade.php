@@ -74,12 +74,16 @@
     </div>
     <div>
         <label class="block font-medium">Número Celular</label>
-        <input type="text" name="celular" class="w-full border rounded px-3 py-2">
+        <input type="text" name="identificacion" class="w-full border rounded px-3 py-2"
+       placeholder="" maxlength="14"
+       oninput="this.value = this.value.replace(/\D/g,'').replace(/(.{4})(.{0,4})(.{0,4})/, function(match,p1,p2,p3){return [p1,p2,p3].filter(Boolean).join('-');});">
     </div>
 
     <div>
         <label class="block font-medium">Identificación No.</label>
-        <input type="text" name="identificacion" class="w-full border rounded px-3 py-2">
+        <input type="text" name="identificacion" class="w-full border rounded px-3 py-2"
+       placeholder="" maxlength="15"
+       oninput="this.value = this.value.replace(/\D/g,'').replace(/(.{4})(.{0,4})(.{0,4})/, function(match,p1,p2,p3){return [p1,p2,p3].filter(Boolean).join('-');});">
     </div>
     <div>
         <label class="block font-medium">RTN No.</label>
@@ -231,16 +235,16 @@
                 @endforeach
             </div>
 
-            <!-- NIVEL DE INGRESOS -->
-            <h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Nivel de Ingreso Aproximado</h3>
-            <div class="section-grid">
-                @foreach(['0-3','4-6','7-10','11-20','21-50','50 en adelante'] as $rango)
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" name="nivel_ingreso[]" value="{{ $rango }}" class="mr-2">
-                        {{ $rango }}
-                    </label>
-                @endforeach
-            </div>
+<!-- NIVEL DE INGRESOS -->
+<h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Ingreso Mensual Aproximado</h3>
+<div class="section-grid">
+    <div class="span-2">
+        <label class="block font-medium">Salario Mensual (L.)</label>
+        <input type="number" name="ingreso_mensual" min="0" step="0.01" placeholder="Lps." 
+               class="w-full border rounded px-3 py-2">
+    </div>
+</div>
+
 
             <!-- DESCRIPCIÓN DE GARANTÍAS -->
             <h3 class="text-lg font-semibold text-praga border-b border-gray-200 pb-2 mb-4">Descripción de Garantías</h3>

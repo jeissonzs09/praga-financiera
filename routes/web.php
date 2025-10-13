@@ -167,6 +167,24 @@ Route::get('/prestamos/{id}/plan', [PagoController::class, 'mostrarPlanAjax'])->
 Route::get('/prestamos/{id}/estado-cuenta', [PagoController::class, 'descargarEstadoCuentaPDF'])
      ->name('pagos.estado.cuenta.pdf');
 
+     // Mostrar estado de cuenta
+Route::get('/prestamos/{prestamo}/estado', [PagoController::class, 'verEstadoCuenta'])->name('pagos.verEstado');
+
+// Descargar desde la misma vista
+Route::get('/prestamos/{prestamo}/estado/descargar', [PagoController::class, 'descargarEstadoCuenta'])->name('pagos.descargarEstado');
+
+Route::get('/prestamos/{id}/estado-cuenta', [PrestamoController::class, 'verEstadoCuentaPDF'])
+    ->name('prestamos.verEstadoCuentaPDF');
+
+Route::get('/pagos/{id}/estado-cuenta/pdf', [PagoController::class, 'descargarEstadoCuentaPDF'])
+    ->name('pagos.estado.cuenta.pdf');
+
+Route::get('pagos/{prestamo}/estado-cuenta', [PagoController::class, 'verEstadoCuentaPDF'])->name('pagos.estado.cuenta.pdf');
+
+Route::get('/pagos/hoy', [PagoController::class, 'pagosHoy'])->name('pagos.hoy');
+
+Route::get('/clientes/{id}/imprimir', [ClienteController::class, 'imprimir'])->name('clientes.imprimir');
+
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.
 //require __DIR__.'/auth.php';
 

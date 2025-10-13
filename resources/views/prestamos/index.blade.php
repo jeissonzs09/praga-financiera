@@ -80,6 +80,14 @@
                    style="width:100%; padding:0.5rem; border:1px solid #ccc; border-radius:0.25rem;">
         </div>
 
+        <div class="top-controls">
+    <label style="font-weight: bold; display:block; margin-bottom:0.3rem;">Ordenar por:</label>
+    <div style="display: flex; gap: 1rem;">
+        <label><input type="radio" name="orden" value="nombre" checked> Nombre</label>
+        <label><input type="radio" name="orden" value="creacion">Creación</label>
+    </div>
+</div>
+
         <div class="clientes-list-wrapper">
             <ul id="listaClientes" class="clientes-list">
                 @foreach ($prestamos->where('estado', 'Activo') as $prestamo)
@@ -108,6 +116,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const allItems = Array.from(lista.querySelectorAll('li')); // 🔹 Lista completa
     let items = [...allItems]; // 🔹 Copia activa
     let selectedIndex = -1;
+
+        const radiosOrden = document.querySelectorAll('input[name="orden"]');
+
+    radiosOrden.forEach(radio => {
+        radio.addEventListener('change', () => {
+            ordenarClientes(radio.value);
+        });
+    });
+
+    function ordenarClientes(tipo) {
+        let listaOrdenada;
+
+        if (tipo === 'nombre') {
+            listaOrdenada = [...allItems].sort((a, b) =>
+                a.textContent.localeCompare(b.textContent)
+            );
+        } else {
+            listaOrdenada = [...allItems].sort((a, b) =>
+                parseInt(b.dataset.id) - parseInt(a.dataset.id)
+            );
+        }
+
+        // Limpiar la lista y volver a insertar en el orden elegido
+        lista.innerHTML = '';
+        listaOrdenada.forEach(li => lista.appendChild(li));
+
+        // Actualizar referencia de items
+        items = listaOrdenada;
+        selectedIndex = -1;
+    }
+
+    ordenarClientes('nombre');
 
     // Filtro dinámico
     buscarInput.addEventListener('input', e => {
@@ -141,11 +181,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function seleccionar(li) {
-        items.forEach(i => i.classList.remove('selected'));
-        li.classList.add('selected');
-        li.scrollIntoView({ block: 'nearest' });
-        cargarPlan(li.dataset.id);
-    }
+    items.forEach(i => i.classList.remove('selected'));
+    li.classList.add('selected');
+    li.scrollIntoView({ block: 'nearest' });
+    cargarPlan(li.dataset.id);
+
+    // 🔹 Actualizar el índice seleccionado según el clic
+    selectedIndex = items.indexOf(li);
+}
 
     async function cargarPlan(id) {
         const estadoSelect = document.getElementById('filtroEstado');

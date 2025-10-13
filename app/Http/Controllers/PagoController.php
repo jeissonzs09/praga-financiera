@@ -513,10 +513,18 @@ public function simularPlan(Request $request)
 
 public function listarPagos(Prestamo $prestamo)
 {
-    // Traer recibos con su total y fecha
-    $recibos = Recibo::where('prestamo_id', $prestamo->id)
+    // Traer recibos del préstamo con sus detalles
+    $recibos = Recibo::with('detalles')
+        ->where('prestamo_id', $prestamo->id)
         ->orderBy('created_at', 'desc')
         ->get();
+
+    // Agregar totales de capital e intereses a cada recibo
+    $recibos->transform(function ($recibo) {
+        $recibo->total_capital = $recibo->detalles->sum('capital');
+        $recibo->total_interes = $recibo->detalles->sum('interes');
+        return $recibo;
+    });
 
     return view('pagos.listar', compact('prestamo', 'recibos'));
 }
@@ -615,9 +623,22 @@ public function guardarDistribucion(Request $request, $prestamoId)
             'mora' => 0,
             'total' => $total,
             'id_recibo' => $recibo->id,
-            'fecha_pago' => $fechaPago, // <-- aquí se asegura que la fecha no se pierda
+            'fecha_pago' => $fechaPago,
         ]);
     }
+
+    // 🔹 Actualizar totales en el recibo usando los detalles
+    $totales = \DB::table('detalle_pagos')
+        ->where('id_recibo', $recibo->id)
+        ->select(
+            \DB::raw('SUM(capital) as total_capital'),
+            \DB::raw('SUM(interes) as total_interes')
+        )
+        ->first();
+
+    $recibo->capital = $totales->total_capital ?? 0;
+    $recibo->interes = $totales->total_interes ?? 0;
+    $recibo->save();
 
     return redirect()->route('recibos.index', $prestamo->id)
                      ->with('success', 'Pago Registrado Correctamente');
@@ -753,19 +774,9 @@ public function descargarEstadoCuentaPDF($id)
     foreach ($cuotasOriginales as &$cuota) {
         $cuota['capital_original'] = $cuota['capital'] ?? 0;
         $cuota['interes_original'] = $cuota['interes'] ?? 0;
-
         $cuota['vence'] = $this->formatearFechaSeguro($cuota['vence'] ?? null);
     }
     unset($cuota);
-
-    // 🔹 Cuotas pagadas
-    $pagadas = $this->generarPlanPagadas($prestamo);
-
-    foreach ($pagadas as &$cuota) {
-        $cuota['vence'] = $this->formatearFechaSeguro($cuota['vence'] ?? null);
-    }
-    unset($cuota);
-
 
     // 🔹 Cuotas pendientes
     $pendientes = $this->generarPlanPagos($prestamo);
@@ -775,11 +786,28 @@ public function descargarEstadoCuentaPDF($id)
     }
     unset($cuota);
 
-        // 🔹 Filtrar solo las cuotas no pagadas o parciales
-$pendientes = collect($pendientes)
-    ->filter(fn($cuota) => ($cuota['capital'] ?? 0) + ($cuota['interes'] ?? 0) + ($cuota['recargos'] ?? 0) + ($cuota['mora'] ?? 0) > 0)
-    ->values()
-    ->toArray();
+    // 🔹 Filtrar solo las cuotas no pagadas o parciales
+    $pendientes = collect($pendientes)
+        ->filter(fn($cuota) => ($cuota['capital'] ?? 0) + ($cuota['interes'] ?? 0) + ($cuota['recargos'] ?? 0) + ($cuota['mora'] ?? 0) > 0)
+        ->values()
+        ->toArray();
+
+    // 🔹 Cuotas pagadas como recibos
+$pagadas = Recibo::with('detalles')
+    ->where('prestamo_id', $prestamo->id)
+    ->orderBy('fecha_pago', 'asc')
+    ->get()
+    ->map(function($recibo) {
+        return [
+            'nro' => $recibo->id,
+            'vence' => \Carbon\Carbon::parse($recibo->fecha_pago)->format('d/m/Y'), // ← aquí
+            'capital' => $recibo->capital,
+            'interes' => $recibo->interes,
+            'recargos' => $recibo->detalles->sum('recargo'),
+            'mora' => $recibo->detalles->sum('mora'),
+            'total' => $recibo->capital + $recibo->interes + $recibo->detalles->sum('recargo') + $recibo->detalles->sum('mora'),
+        ];
+    })->toArray();
 
     // 🔹 Totales
     $totalesOriginal = [
@@ -795,8 +823,7 @@ $pendientes = collect($pendientes)
         'recargos' => array_sum(array_column($pendientes, 'recargos')),
         'mora'     => array_sum(array_column($pendientes, 'mora')),
         'total'    => array_sum(array_map(fn($c) =>
-            ($c['capital'] ?? 0) + ($c['interes'] ?? 0) +
-            ($c['recargos'] ?? 0) + ($c['mora'] ?? 0), $pendientes)),
+            ($c['capital'] ?? 0) + ($c['interes'] ?? 0) + ($c['recargos'] ?? 0) + ($c['mora'] ?? 0), $pendientes)),
     ];
 
     $totalesPagadas = [
@@ -804,9 +831,7 @@ $pendientes = collect($pendientes)
         'interes'  => array_sum(array_column($pagadas, 'interes')),
         'recargos' => array_sum(array_column($pagadas, 'recargos')),
         'mora'     => array_sum(array_column($pagadas, 'mora')),
-        'total'    => array_sum(array_map(fn($c) =>
-            ($c['capital'] ?? 0) + ($c['interes'] ?? 0) +
-            ($c['recargos'] ?? 0) + ($c['mora'] ?? 0), $pagadas)),
+        'total'    => array_sum(array_column($pagadas, 'total')),
     ];
 
     // 🔹 Generar PDF
@@ -851,6 +876,120 @@ private function formatearFechaSeguro($fecha)
     } catch (\Exception $e) {
         return '-';
     }
+}
+
+public function verEstadoCuentaPDF($id)
+{
+    $prestamo = Prestamo::with('cliente')->findOrFail($id);
+
+    // 🔹 Plan original completo
+    $cuotasOriginales = $this->generarPlanOriginal($prestamo);
+    foreach ($cuotasOriginales as &$cuota) {
+        $cuota['capital_original'] = $cuota['capital'] ?? 0;
+        $cuota['interes_original'] = $cuota['interes'] ?? 0;
+        $cuota['vence'] = $this->formatearFechaSeguro($cuota['vence'] ?? null);
+    }
+    unset($cuota);
+
+    // 🔹 Cuotas pendientes
+    $pendientes = $this->generarPlanPagos($prestamo);
+    foreach ($pendientes as &$cuota) {
+        $cuota['vence'] = $this->formatearFechaSeguro($cuota['vence'] ?? null);
+    }
+    unset($cuota);
+
+    // 🔹 Filtrar solo las cuotas no pagadas o parciales
+    $pendientes = collect($pendientes)
+        ->filter(fn($cuota) => ($cuota['capital'] ?? 0) + ($cuota['interes'] ?? 0) + ($cuota['recargos'] ?? 0) + ($cuota['mora'] ?? 0) > 0)
+        ->values()
+        ->toArray();
+
+    // 🔹 Cuotas pagadas como recibos
+    $pagadas = Recibo::with('detalles')
+        ->where('prestamo_id', $prestamo->id)
+        ->orderBy('fecha_pago', 'asc')
+        ->get()
+        ->map(function($recibo) {
+            return [
+                'nro' => $recibo->id,
+                'vence' => \Carbon\Carbon::parse($recibo->fecha_pago)->format('d/m/Y'),
+                'capital' => $recibo->capital,
+                'interes' => $recibo->interes,
+                'recargos' => $recibo->detalles->sum('recargo'),
+                'mora' => $recibo->detalles->sum('mora'),
+                'total' => $recibo->capital + $recibo->interes + $recibo->detalles->sum('recargo') + $recibo->detalles->sum('mora'),
+            ];
+        })->toArray();
+
+    // 🔹 Totales
+    $totalesOriginal = [
+        'capital' => array_sum(array_column($cuotasOriginales, 'capital_original')),
+        'interes' => array_sum(array_column($cuotasOriginales, 'interes_original')),
+        'total'   => array_sum(array_map(fn($c) => ($c['capital_original'] ?? 0) + ($c['interes_original'] ?? 0), $cuotasOriginales)),
+    ];
+
+    $totalesPendientes = [
+        'capital'  => array_sum(array_column($pendientes, 'capital')),
+        'interes'  => array_sum(array_column($pendientes, 'interes')),
+        'recargos' => array_sum(array_column($pendientes, 'recargos')),
+        'mora'     => array_sum(array_column($pendientes, 'mora')),
+        'total'    => array_sum(array_map(fn($c) => ($c['capital'] ?? 0) + ($c['interes'] ?? 0) + ($c['recargos'] ?? 0) + ($c['mora'] ?? 0), $pendientes)),
+    ];
+
+    $totalesPagadas = [
+        'capital'  => array_sum(array_column($pagadas, 'capital')),
+        'interes'  => array_sum(array_column($pagadas, 'interes')),
+        'recargos' => array_sum(array_column($pagadas, 'recargos')),
+        'mora'     => array_sum(array_column($pagadas, 'mora')),
+        'total'    => array_sum(array_column($pagadas, 'total')),
+    ];
+
+    // 🔹 Generar PDF
+    $pdf = Pdf::loadView('prestamos.pdf.estado_cuenta', [
+        'prestamo'          => $prestamo,
+        'cuotasOriginales'  => $cuotasOriginales,
+        'pendientes'        => $pendientes,
+        'pagadas'           => $pagadas,
+        'totalesOriginal'   => $totalesOriginal,
+        'totalesPendientes' => $totalesPendientes,
+        'totalesPagadas'    => $totalesPagadas,
+    ])->setPaper('letter', 'portrait');
+
+    // 🔹 Mostrar en navegador (stream) en lugar de descargar
+    return $pdf->stream('Estado_de_Cuenta_' . str_replace(' ', '_', $prestamo->cliente->nombre_completo) . '_' . $prestamo->id . '.pdf');
+}
+
+
+public function pagosHoy()
+{
+    $hoy = Carbon::today();
+    $cuotasHoy = [];
+    $cuotasAtrasadas = [];
+
+    // Traer todos los prestamos activos
+    $prestamos = Prestamo::with('cliente')->where('estado', 'Activo')->get();
+
+    foreach ($prestamos as $prestamo) {
+        // Generar las cuotas con tu método actual
+        $cuotas = $this->generarPlanPagos($prestamo);
+
+        foreach ($cuotas as $cuota) {
+            $fechaVence = Carbon::parse($cuota['vence']);
+            $estado = $cuota['estado'];
+
+            // Pagos que vencen hoy
+            if ($fechaVence->isToday() && $estado === 'Pendiente') {
+                $cuotasHoy[] = array_merge($cuota, ['cliente' => $prestamo->cliente]);
+            }
+
+            // Pagos atrasados
+            if ($fechaVence->isPast() && in_array($estado, ['Pendiente','Parcial','Vencida'])) {
+                $cuotasAtrasadas[] = array_merge($cuota, ['cliente' => $prestamo->cliente]);
+            }
+        }
+    }
+
+    return view('pagos.hoy', compact('cuotasHoy', 'cuotasAtrasadas'));
 }
 
 }

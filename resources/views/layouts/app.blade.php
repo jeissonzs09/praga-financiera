@@ -219,6 +219,13 @@
     Reportes
 </a>
 
+<a href="{{ route('pagos.hoy') }}" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700 rounded transition">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 inline-block mr-2" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm1 15h-2v-6h2zm0-8h-2V7h2z"/>
+    </svg>
+    Pagos del Día
+</a>
+
 
 </div>
 
