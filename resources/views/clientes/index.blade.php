@@ -38,8 +38,8 @@
     </a>
 </div>
 
-
-    <div class="overflow-visible bg-white rounded-lg shadow">
+<div class="overflow-visible bg-white rounded-lg shadow">
+    <div style="max-height:600px; overflow-y:auto;">
         <table class="min-w-full text-sm text-gray-800">
             <thead class="bg-blue-900 text-white text-sm uppercase">
                 <tr>
@@ -101,6 +101,17 @@
         </table>
     </div>
 </div>
+</div>
+
+{{-- 🔹 Encabezado sticky --}}
+<style>
+    table thead {
+        position: sticky;
+        top: 0;
+        background-color: #1e3a8a;
+        z-index: 10;
+    }
+</style>
 
 {{-- 🔹 Script para desplegar menú --}}
 <script>
@@ -118,6 +129,7 @@
     });
 </script>
 
+{{-- 🔹 Búsqueda dinámica con AJAX --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('search');
@@ -129,7 +141,6 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`{{ route('clientes.index') }}?search=${encodeURIComponent(search)}`)
             .then(res => res.text())
             .then(html => {
-                // Crear un DOM temporal para extraer solo el tbody actualizado
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 const newTbody = doc.querySelector('#clientes-body');

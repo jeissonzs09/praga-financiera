@@ -12,16 +12,16 @@ public function index(Request $request)
 {
     $query = Cliente::query();
 
-    // Filtro por nombre si se recibe search
     if ($request->has('search') && $request->search != '') {
         $query->where('nombre_completo', 'like', '%' . $request->search . '%');
     }
 
-    // Ordenar por fecha de creación descendente
+    // ✅ Asegúrate de usar get() SIEMPRE
     $clientes = $query->orderBy('created_at', 'desc')->get();
 
     return view('clientes.index', compact('clientes'));
 }
+
 
     // Mostrar formulario de registro
     public function create()

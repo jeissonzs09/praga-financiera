@@ -3,7 +3,7 @@
     <div class="mb-4 p-4 bg-gray-100 rounded-lg shadow-sm text-center">
         <h3 class="text-lg font-semibold mb-2">INVERSIONES PRAGA - DETALLE DE PRÉSTAMO</h3>
         <p><strong>Cliente:</strong> {{ $prestamo->cliente->nombre_completo }}</p>
-        <p><strong>Identidad:</strong> {{ $prestamo->cliente->identidad }}</p>
+        <p class="text-center"><strong>Identidad:</strong> {{ $prestamo->cliente->identificacion ?? 'N/A' }}</p>
         <p><strong>N° Préstamo:</strong> {{ $prestamo->id }}</p>
         <p><strong>Monto:</strong> L. {{ number_format($prestamo->valor_prestamo, 2) }}</p>
         <p><strong>Interés:</strong> {{ $prestamo->porcentaje_interes }}%</p>

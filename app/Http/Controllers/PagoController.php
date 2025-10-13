@@ -23,7 +23,7 @@ public function index(Request $request)
             });
         })
         ->latest() // 👈 ordena por fecha de creación, más nuevos primero
-        ->paginate(10); // 👈 solo 10 por página
+        ->get(); // 👈 solo 10 por página
 
     return view('pagos.index', compact('prestamos'));
 }
