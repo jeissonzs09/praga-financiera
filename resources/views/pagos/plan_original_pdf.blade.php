@@ -70,13 +70,14 @@
 </td>
 
                 <td class="titulo" style="text-align: center;">
-                    <h1>INVERSIONES PRAGA</h1>
-                    <h2>PLAN DE PAGO ORIGINAL</h2>
-                    <p><strong>Cliente:</strong> {{ $prestamo->cliente->nombre_completo }}</p>
-                    <p><strong>Monto:</strong> L. {{ number_format($prestamo->valor_prestamo, 2) }}</p>
-                    <p><strong>Interés:</strong> {{ $prestamo->porcentaje_interes }}%</p>
-                    <p><strong>Plazo:</strong> {{ $prestamo->plazo }} meses</p>
-                </td>
+    <h1>INVERSIONES PRAGA</h1>
+    <h2>PLAN DE PAGO ORIGINAL</h2>
+    <p><strong>N° Préstamo:</strong> {{ $prestamo->id }}</p>
+    <p><strong>Cliente:</strong> {{ $prestamo->cliente->nombre_completo }}</p>
+    <p><strong>Monto:</strong> L. {{ number_format($prestamo->valor_prestamo, 2) }}</p>
+    <p><strong>Interés:</strong> {{ $prestamo->porcentaje_interes }}%</p>
+    <p><strong>Plazo:</strong> {{ $prestamo->plazo }} meses</p>
+</td>
             </tr>
         </table>
     </div>

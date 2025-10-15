@@ -1,4 +1,40 @@
 <div>
+    {{-- 🔹 Botones de descarga y visualización arriba del encabezado --}}
+    <div class="mb-4 flex justify-end gap-2">
+        <a href="{{ route('pagos.plan.original.pdf', $prestamo->id) }}"
+           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
+            🖨️ Descargar Plan Original
+        </a>
+
+<button 
+    onclick="window.open('{{ route('pagos.estado.cuenta.pdf', $prestamo->id) }}', '_blank');"
+    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+    👁️ Ver Estado de Cuenta
+</button>
+
+        @if($prestamo->estado === 'Activo')
+            <form method="POST" action="{{ route('prestamos.inactivar', $prestamo->id) }}"
+                  onsubmit="return confirm('¿Estás seguro de que deseas marcar este préstamo como inactivo? Esta acción lo moverá al historial y no aparecerá en la vista principal.');">
+                @csrf
+                @method('PATCH')
+                <button type="submit"
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">
+                    🛑 Marcar como Inactivo
+                </button>
+            </form>
+        @else
+            <form method="POST" action="{{ route('prestamos.activar', $prestamo->id) }}"
+                  onsubmit="return confirm('¿Deseas reactivar este préstamo? Volverá a aparecer en la vista principal.');">
+                @csrf
+                @method('PATCH')
+                <button type="submit"
+                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow">
+                    🔄 Reactivar Préstamo
+                </button>
+            </form>
+        @endif
+    </div>
+
     {{-- 🔹 Encabezado compacto en 3 columnas --}}
     <div class="mb-4 p-4 bg-gray-100 rounded-lg shadow-sm">
         <h3 class="text-lg font-semibold text-center mb-3">INVERSIONES PRAGA - DETALLE DE PRÉSTAMO</h3>
@@ -26,27 +62,37 @@
         </div>
     </div>
 
-@if($prestamo->estado === 'Activo')
-    <form method="POST" action="{{ route('prestamos.inactivar', $prestamo->id) }}"
-          onsubmit="return confirm('¿Estás seguro de que deseas marcar este préstamo como inactivo? Esta acción lo moverá al historial y no aparecerá en la vista principal.');">
-        @csrf
-        @method('PATCH')
-        <button type="submit"
-            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">
-            🛑 Marcar como Inactivo
-        </button>
-    </form>
-@else
-    <form method="POST" action="{{ route('prestamos.activar', $prestamo->id) }}"
-          onsubmit="return confirm('¿Deseas reactivar este préstamo? Volverá a aparecer en la vista principal.');">
-        @csrf
-        @method('PATCH')
-        <button type="submit"
-            class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow">
-            🔄 Reactivar Préstamo
-        </button>
-    </form>
-@endif
+    {{-- 🔹 Totales debajo del encabezado y antes de la tabla --}}
+    @php
+        $totalCapital = 0;
+        $totalInteres = 0;
+        $totalRecargos = 0;
+        $totalMora = 0;
+        $totalTotal = 0;
+        foreach ($cuotas as $cuota) {
+            $cap = $cuota['capital'];
+            $int = $cuota['interes'];
+            if(($estadoSeleccionado ?? '') === 'Pagadas') {
+                $cap = $cuota['capital_original'] ?? $cap;
+                $int = $cuota['interes_original'] ?? $int;
+            }
+            $totalCuota = $cap + $int + $cuota['recargos'] + $cuota['mora'];
+            $totalCapital += $cap;
+            $totalInteres += $int;
+            $totalRecargos += $cuota['recargos'];
+            $totalMora += $cuota['mora'];
+            $totalTotal += $totalCuota;
+        }
+    @endphp
+
+<div class="mb-4 p-3 bg-blue-200 rounded-lg shadow-sm text-sm font-semibold grid grid-cols-5 gap-4 text-gray-900">
+    <p>Total Capital: L. {{ number_format($totalCapital, 2) }}</p>
+    <p>Total Interés: L. {{ number_format($totalInteres, 2) }}</p>
+    <p>Total Recargos: L. {{ number_format($totalRecargos, 2) }}</p>
+    <p>Total Mora: L. {{ number_format($totalMora, 2) }}</p>
+    <p>Total General: L. {{ number_format($totalTotal, 2) }}</p>
+</div>
+
 
     {{-- 🔹 Filtro por estado --}}
     <div class="mb-2 flex justify-end items-center gap-2">
@@ -59,33 +105,17 @@
         </select>
     </div>
 
-{{-- 🔹 Botones de descarga y visualización --}}
-<div class="mb-4 flex justify-end gap-2">
-    <a href="{{ route('pagos.plan.original.pdf', $prestamo->id) }}"
-       class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
-        🖨️ Descargar Plan Original
-    </a>
-
-    {{-- 🔹 Botón para mostrar el Estado de Cuenta --}}
-<button 
-    onclick="window.open('{{ route('pagos.estado.cuenta.pdf', $prestamo->id) }}', '_blank');"
-    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
-    👁️ Ver Estado de Cuenta
-</button>
-</div>
-
-{{-- 🔹 Contenedor del Estado de Cuenta (inicialmente oculto) --}}
-<div id="estadoCuentaContainer" class="mt-6 hidden">
-    <h3 class="text-lg font-semibold mb-2">Estado de Cuenta</h3>
-    <iframe 
-        id="iframeEstadoCuenta"
-        src="" 
-        width="100%" 
-        height="800px" 
-        style="border:1px solid #ccc;">
-    </iframe>
-</div>
-
+    {{-- 🔹 Contenedor del Estado de Cuenta --}}
+    <div id="estadoCuentaContainer" class="mt-6 hidden">
+        <h3 class="text-lg font-semibold mb-2">Estado de Cuenta</h3>
+        <iframe 
+            id="iframeEstadoCuenta"
+            src="" 
+            width="100%" 
+            height="800px" 
+            style="border:1px solid #ccc;">
+        </iframe>
+    </div>
 
     {{-- 🔹 Tabla del plan de pagos --}}
     <div class="overflow-x-auto bg-white rounded-lg shadow">
@@ -103,14 +133,6 @@
                 </tr>
             </thead>
             <tbody>
-                @php
-                    $totalCapital = 0;
-                    $totalInteres = 0;
-                    $totalRecargos = 0;
-                    $totalMora = 0;
-                    $totalTotal = 0;
-                @endphp
-
                 @foreach ($cuotas as $cuota)
                     @php
                         $mostrar = false;
@@ -123,7 +145,6 @@
                             $mostrar = true;
                         }
 
-                        // Valores
                         $cap = $cuota['capital'];
                         $int = $cuota['interes'];
                         if($estadoSeleccionado === 'Pagadas') {
@@ -132,30 +153,23 @@
                         }
 
                         $totalCuota = $cap + $int + $cuota['recargos'] + $cuota['mora'];
-                        $totalCapital += $cap;
-                        $totalInteres += $int;
-                        $totalRecargos += $cuota['recargos'];
-                        $totalMora += $cuota['mora'];
-                        $totalTotal += $totalCuota;
 
-                        // 🔹 Solo verde o rojo
-// 🔹 Verde si pagada completa, rojo si vencida (incluye parciales)
-$fechaVence = \Carbon\Carbon::parse($cuota['vence']);
-$saldoPendiente = ($cuota['capital'] + $cuota['interes'] + $cuota['recargos'] + $cuota['mora']) - ($cuota['pagado'] ?? 0);
+                        $fechaVence = \Carbon\Carbon::parse($cuota['vence']);
+                        $saldoPendiente = ($cuota['capital'] + $cuota['interes'] + $cuota['recargos'] + $cuota['mora']) - ($cuota['pagado'] ?? 0);
 
-if ($cuota['estado'] === 'Pagada') {
-    $clase = 'bg-green-100 text-green-800';
-} elseif ($fechaVence->isPast() && $saldoPendiente > 0) {
-    $clase = 'bg-red-100 text-red-800';
-} else {
-    $clase = '';
-}
+                        if ($cuota['estado'] === 'Pagada') {
+                            $clase = 'bg-green-100 text-green-800';
+                        } elseif ($fechaVence->isPast() && $saldoPendiente > 0) {
+                            $clase = 'bg-red-100 text-red-800';
+                        } else {
+                            $clase = '';
+                        }
                     @endphp
 
                     @if($mostrar)
                         <tr class="border-b hover:bg-gray-50 {{ $clase }}">
                             <td class="px-3 py-1 text-center">{{ $cuota['nro'] }}</td>
-                            <td class="px-3 py-1 text-center">{{ \Carbon\Carbon::parse($cuota['vence'])->format('d/m/Y') }}</td>
+                            <td class="px-3 py-1 text-center">{{ $fechaVence->format('d/m/Y') }}</td>
                             <td class="px-3 py-1 text-right">L. {{ number_format($cap, 2) }}</td>
                             <td class="px-3 py-1 text-right">L. {{ number_format($int, 2) }}</td>
                             <td class="px-3 py-1 text-right">L. {{ number_format($cuota['recargos'], 2) }}</td>
@@ -167,18 +181,18 @@ if ($cuota['estado'] === 'Pagada') {
                 @endforeach
             </tbody>
 
-            {{-- Totales --}}
             <tfoot class="bg-gray-50 text-sm font-semibold">
-                <tr>
-                    <td class="px-4 py-2 text-right" colspan="2">Totales</td>
-                    <td class="px-4 py-2 text-right">L. {{ number_format($totalCapital, 2) }}</td>
-                    <td class="px-4 py-2 text-right">L. {{ number_format($totalInteres, 2) }}</td>
-                    <td class="px-4 py-2 text-right">L. {{ number_format($totalRecargos, 2) }}</td>
-                    <td class="px-4 py-2 text-right">L. {{ number_format($totalMora, 2) }}</td>
-                    <td class="px-4 py-2 text-right">L. {{ number_format($totalTotal, 2) }}</td>
-                    <td class="px-4 py-2 text-right">—</td>
-                </tr>
-            </tfoot>
+    <tr>
+        <td class="px-4 py-2 text-right" colspan="2">Totales</td>
+        <td class="px-4 py-2 text-right">L. {{ number_format($totalCapital, 2) }}</td>
+        <td class="px-4 py-2 text-right">L. {{ number_format($totalInteres, 2) }}</td>
+        <td class="px-4 py-2 text-right">L. {{ number_format($totalRecargos, 2) }}</td>
+        <td class="px-4 py-2 text-right">L. {{ number_format($totalMora, 2) }}</td>
+        <td class="px-4 py-2 text-right">L. {{ number_format($totalTotal, 2) }}</td>
+        <td class="px-4 py-2 text-right">—</td>
+    </tr>
+</tfoot>
+
         </table>
     </div>
 </div>
@@ -204,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const iframe = document.getElementById('iframeEstadoCuenta');
 
     btn.addEventListener('click', () => {
-        console.log('Botón clickeado'); // <- Esto debería aparecer en la consola
         iframe.src = "{{ route('pagos.estado.cuenta.pdf', $prestamo->id) }}";
         container.classList.remove('hidden');
         container.scrollIntoView({ behavior: 'smooth' });

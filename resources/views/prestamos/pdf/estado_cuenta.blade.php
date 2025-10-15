@@ -31,28 +31,33 @@ use Carbon\Carbon;
 <body>
 
     {{-- 🔹 ENCABEZADO CENTRALIZADO --}}
-    <table class="header-info">
-        <tr>
-            <td colspan="2" style="text-align:center; font-weight:bold; font-size:14px;">
-                INVERSIONES PRAGA - DETALLE DE PRÉSTAMO PRENDARIO SIMPLE
-            </td>
-        </tr>
-        <tr>
-            <td><strong>Cliente:</strong> {{ $prestamo->cliente->nombre_completo }}</td>
-            <td><strong>Identidad:</strong> {{ $prestamo->cliente->identificacion ?? 'N/A' }}</td>
-        </tr>
-        <tr>
-            <td><strong>N° Préstamo:</strong> {{ $prestamo->id }}</td>
-            <td><strong>Monto:</strong> L. {{ number_format($prestamo->valor_prestamo, 2) }}</td>
-        </tr>
-        <tr>
-            <td><strong>Interés:</strong> {{ $prestamo->porcentaje_interes }}%</td>
-            <td><strong>Plazo:</strong> {{ $prestamo->plazo }} {{ $prestamo->plazo > 1 ? 'meses' : 'mes' }}</td>
-        </tr>
-        <tr>
-            <td colspan="2"><strong>Fecha de emisión:</strong> {{ Carbon::now()->format('d/m/Y') }}</td>
-        </tr>
-    </table>
+<table class="header-info">
+    <tr>
+        <td colspan="2" style="text-align:center;">
+            <img src="{{ public_path('images/logo-praga.png') }}" alt="Logo PRAGA" style="width: 100px; margin-bottom: 10px;">
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" style="text-align:center; font-weight:bold; font-size:14px;">
+            INVERSIONES PRAGA - DETALLE DE PRÉSTAMO PRENDARIO SIMPLE
+        </td>
+    </tr>
+    <tr>
+        <td><strong>Cliente:</strong> {{ $prestamo->cliente->nombre_completo }}</td>
+        <td><strong>Identidad:</strong> {{ $prestamo->cliente->identificacion ?? 'N/A' }}</td>
+    </tr>
+    <tr>
+        <td><strong>N° Préstamo:</strong> {{ $prestamo->id }}</td>
+        <td><strong>Monto:</strong> L. {{ number_format($prestamo->valor_prestamo, 2) }}</td>
+    </tr>
+    <tr>
+        <td><strong>Interés:</strong> {{ $prestamo->porcentaje_interes }}%</td>
+        <td><strong>Plazo:</strong> {{ $prestamo->plazo }} {{ $prestamo->plazo > 1 ? 'meses' : 'mes' }}</td>
+    </tr>
+    <tr>
+        <td colspan="2"><strong>Fecha de emisión:</strong> {{ Carbon::now()->format('d/m/Y') }}</td>
+    </tr>
+</table>
 
     {{-- 🔹 PLAN ORIGINAL --}}
     <div class="section-title">PLAN ORIGINAL</div>
