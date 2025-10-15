@@ -79,4 +79,28 @@ public function destroy(Prestamo $prestamo)
         ->with('success', 'Préstamo eliminado correctamente.');
 }
 
+public function inactivar($id)
+{
+    $prestamo = Prestamo::findOrFail($id);
+    $prestamo->estado = 'Inactivo';
+    $prestamo->save();
+
+    return redirect()->back()->with('success', 'Préstamo marcado como inactivo.');
+}
+
+public function historial()
+{
+    $prestamos = Prestamo::where('estado', '!=', 'Activo')->with('cliente')->get();
+    return view('prestamos.historial', compact('prestamos'));
+}
+
+public function activar($id)
+{
+    $prestamo = Prestamo::findOrFail($id);
+    $prestamo->estado = 'Activo';
+    $prestamo->save();
+
+    return redirect()->back()->with('success', 'Préstamo reactivado correctamente.');
+}
+
 }

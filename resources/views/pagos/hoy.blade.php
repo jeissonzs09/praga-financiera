@@ -9,10 +9,19 @@
 
     <h2 class="text-xl font-semibold mb-4 text-center">{{ $titulo }}</h2>
 
-    <!-- Buscador -->
-    <div class="mb-4 flex gap-2 items-center justify-center">
-        <input type="text" id="buscar" placeholder="Buscar por cliente..."
-               class="border border-gray-300 rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <!-- 🔹 Buscadores -->
+    <div class="mb-4 flex flex-wrap gap-4 items-center justify-between">
+        <div class="flex gap-2 items-center">
+            <label for="buscar" class="text-sm font-semibold">Cliente:</label>
+            <input type="text" id="buscar" placeholder="Buscar por cliente..."
+                   class="border border-gray-300 rounded px-3 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div class="flex gap-2 items-center">
+            <label for="buscarFecha" class="text-sm font-semibold">Fecha:</label>
+            <input type="date" id="buscarFecha"
+                   class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
     </div>
 
     <div class="overflow-visible bg-white rounded-lg shadow">
@@ -27,37 +36,34 @@
                         <th class="px-4 py-3 text-right">Capital Pendiente</th>
                         <th class="px-4 py-3 text-right">Interés Pendiente</th>
                         <th class="px-4 py-3 text-right">Monto Pendiente</th>
+                        <th class="px-4 py-3 text-center">Acciones</th> {{-- 🔹 Nueva columna --}}
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @php
-                        // Agrupar cuotas atrasadas por cliente
                         $clientes = [];
                         foreach($cuotasAtrasadas as $cuota){
                             $idCliente = $cuota['cliente']->id_cliente;
 
                             if(!isset($clientes[$idCliente])){
                                 $clientes[$idCliente] = [
+                                     'id_prestamo' => $cuota['prestamo_id'],
                                     'nombre_completo' => $cuota['cliente']->nombre_completo,
                                     'primer_fecha' => $cuota['vence'],
                                     'capital_pendiente' => 0,
                                     'interes_pendiente' => 0,
                                     'monto_pendiente' => 0,
-                                    'cuotas_atrasadas' => 0, // Inicializamos aquí
+                                    'cuotas_atrasadas' => 0,
                                 ];
                             }
 
-                            // Actualizar la primera fecha de vencimiento
                             if(\Carbon\Carbon::parse($cuota['vence'])->lt(\Carbon\Carbon::parse($clientes[$idCliente]['primer_fecha']))){
                                 $clientes[$idCliente]['primer_fecha'] = $cuota['vence'];
                             }
 
-                            // Sumar los importes pendientes
                             $clientes[$idCliente]['capital_pendiente'] += $cuota['capital'];
                             $clientes[$idCliente]['interes_pendiente'] += $cuota['interes'];
                             $clientes[$idCliente]['monto_pendiente'] += $cuota['total'];
-
-                            // Contar la cuota atrasada
                             $clientes[$idCliente]['cuotas_atrasadas']++;
                         }
                     @endphp
@@ -71,6 +77,12 @@
                             <td class="px-4 py-2 text-right">L. {{ number_format($cliente['capital_pendiente'], 2) }}</td>
                             <td class="px-4 py-2 text-right">L. {{ number_format($cliente['interes_pendiente'], 2) }}</td>
                             <td class="px-4 py-2 text-right font-bold">L. {{ number_format($cliente['monto_pendiente'], 2) }}</td>
+<td class="px-4 py-2 text-center">
+<a href="{{ route('prestamos.index', ['prestamo' => $cliente['id_prestamo']]) }}"
+   class="inline-block bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1 rounded shadow transition">
+    📄 Ver Plan
+</a>
+</td>
                         </tr>
                     @empty
                         <tr>
@@ -96,21 +108,31 @@
     }
 </style>
 
-{{-- 🔹 Búsqueda dinámica en DOM --}}
+{{-- 🔹 Filtro dinámico por cliente y fecha --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const buscarInput = document.getElementById('buscar');
+    const buscarFecha = document.getElementById('buscarFecha');
     const filas = document.querySelectorAll('#tablaCuotas tbody tr');
 
-    buscarInput.addEventListener('input', function() {
+    function filtrar() {
         const texto = buscarInput.value.toLowerCase();
+        const fecha = buscarFecha.value;
 
         filas.forEach(fila => {
             const cliente = fila.cells[1].textContent.toLowerCase();
-            fila.style.display = cliente.includes(texto) ? '' : 'none';
+            const fechaTexto = fila.cells[2].textContent.trim();
+            const fechaFormateada = fechaTexto.split('/').reverse().join('-'); // convierte dd/mm/yyyy a yyyy-mm-dd
+
+            const coincideCliente = cliente.includes(texto);
+            const coincideFecha = !fecha || fechaFormateada === fecha;
+
+            fila.style.display = (coincideCliente && coincideFecha) ? '' : 'none';
         });
-    });
+    }
+
+    buscarInput.addEventListener('input', filtrar);
+    buscarFecha.addEventListener('input', filtrar);
 });
 </script>
-
 @endsection

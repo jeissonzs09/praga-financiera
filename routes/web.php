@@ -185,6 +185,14 @@ Route::get('/pagos/hoy', [PagoController::class, 'pagosHoy'])->name('pagos.hoy')
 
 Route::get('/clientes/{id}/imprimir', [ClienteController::class, 'imprimir'])->name('clientes.imprimir');
 
+Route::get('/prestamos/historial', [PrestamoController::class, 'historial'])->name('prestamos.historial');
+
+Route::patch('/prestamos/{id}/inactivar', [PrestamoController::class, 'inactivar'])->name('prestamos.inactivar');
+
+Route::get('/prestamos/historial', [PrestamoController::class, 'historial'])->name('prestamos.historial');
+
+Route::patch('/prestamos/{id}/activar', [PrestamoController::class, 'activar'])->name('prestamos.activar');
+
+
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.
 //require __DIR__.'/auth.php';
-

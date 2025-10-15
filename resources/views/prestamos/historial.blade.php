@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @php
-    $titulo = 'Listado de Préstamos';
+    $titulo = 'Historial de Préstamos';
 @endphp
 
 @section('content')
@@ -13,30 +13,29 @@
         height: calc(100vh - 2rem);
     }
 
-/* Panel izquierdo */
-.clientes-panel {
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 1rem;
-    overflow: hidden; /* Evita que el scroll se corte */
-}
+    .clientes-panel {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 1rem;
+        overflow: hidden;
+    }
 
     .top-controls {
         flex: none;
         margin-bottom: 0.5rem;
     }
 
-/* Lista de clientes con scroll */
-.clientes-list-wrapper {
-    flex: 1;
-    overflow-y: auto;
-    border-top: 1px solid #e5e7eb;
-    max-height: calc(100vh - 12rem); /* Ajusta según el alto de los controles superiores */
-}
+    .clientes-list-wrapper {
+        flex: 1;
+        overflow-y: auto;
+        border-top: 1px solid #e5e7eb;
+        max-height: calc(100vh - 12rem);
+    }
+
     .clientes-list {
         list-style: none;
         margin: 0;
@@ -52,10 +51,9 @@
     .clientes-list li:hover,
     .clientes-list li:focus,
     .clientes-list li.selected {
-        background-color: #bfdbfe; /* azul claro */
+        background-color: #fde68a;
     }
 
-    /* Panel derecho */
     .plan-panel {
         background: white;
         border-radius: 0.5rem;
@@ -66,30 +64,12 @@
 </style>
 
 <div class="prestamos-container">
-
-@if(session('success'))
-    <div 
-        x-data="{ show: true }" 
-        x-init="setTimeout(() => show = false, 2000)" 
-        x-show="show"
-        x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 scale-90"
-        x-transition:enter-end="opacity-100 scale-100"
-        class="fixed inset-0 flex items-center justify-center z-50"
-    >
-        <div class="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-5 rounded-2xl shadow-2xl text-center text-base md:text-lg font-semibold flex items-center gap-3 max-w-md w-full">
-            <span class="text-2xl">✅</span>
-            <span>{{ session('success') }}</span>
-        </div>
-    </div>
-@endif
-
     {{-- 🔹 Panel izquierdo --}}
     <div class="clientes-panel">
         <div class="top-controls text-center">
-            <a href="{{ route('prestamos.create') }}"
-               class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow text-sm">
-                <i class="fas fa-plus-circle"></i> Nuevo Préstamo
+            <a href="{{ route('prestamos.index') }}"
+               class="inline-flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow text-sm">
+                <i class="fas fa-arrow-left"></i> Volver a Activos
             </a>
         </div>
 
@@ -99,16 +79,16 @@
         </div>
 
         <div class="top-controls">
-    <label style="font-weight: bold; display:block; margin-bottom:0.3rem;">Ordenar por:</label>
-    <div style="display: flex; gap: 1rem;">
-        <label><input type="radio" name="orden" value="nombre" checked> Nombre</label>
-        <label><input type="radio" name="orden" value="creacion">Creación</label>
-    </div>
-</div>
+            <label style="font-weight: bold; display:block; margin-bottom:0.3rem;">Ordenar por:</label>
+            <div style="display: flex; gap: 1rem;">
+                <label><input type="radio" name="orden" value="nombre" checked> Nombre</label>
+                <label><input type="radio" name="orden" value="creacion">Creación</label>
+            </div>
+        </div>
 
         <div class="clientes-list-wrapper">
             <ul id="listaClientes" class="clientes-list">
-                @foreach ($prestamos->where('estado', 'Activo') as $prestamo)
+                @foreach ($prestamos->where('estado', '!=', 'Activo') as $prestamo)
                     <li data-id="{{ $prestamo->id }}" tabindex="0">
                         {{ $prestamo->cliente->nombre_completo }}
                     </li>
@@ -120,7 +100,7 @@
     {{-- 🔹 Panel derecho --}}
     <div id="planContainer" class="plan-panel">
         <p style="text-align:center; color:#6b7280; font-style:italic;">
-            Selecciona un cliente para ver su plan de pago
+            Selecciona un cliente para ver su historial de pagos
         </p>
     </div>
 </div>
@@ -137,9 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const radiosOrden = document.querySelectorAll('input[name="orden"]');
     radiosOrden.forEach(radio => {
-        radio.addEventListener('change', () => {
-            ordenarClientes(radio.value);
-        });
+        radio.addEventListener('change', () => ordenarClientes(radio.value));
     });
 
     function ordenarClientes(tipo) {
@@ -165,9 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     lista.addEventListener('click', e => {
-        if (e.target.closest('li')) {
-            seleccionar(e.target.closest('li'));
-        }
+        if (e.target.closest('li')) seleccionar(e.target.closest('li'));
     });
 
     document.addEventListener('keydown', e => {
@@ -192,44 +168,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function cargarPlan(id) {
-        const estadoSelect = document.getElementById('filtroEstado');
-        const estado = estadoSelect?.value || 'Todas';
-
         planContainer.innerHTML = '<p style="text-align:center; color:#9ca3af; font-style:italic;">Cargando...</p>';
-        const response = await fetch(`/prestamos/${id}/plan?estado=${estado}`);
+        const response = await fetch(`/prestamos/${id}/plan?estado=Todas`);
         const html = await response.text();
         planContainer.innerHTML = html;
-
-        const eliminarBtn = document.createElement('div');
-        eliminarBtn.style.textAlign = 'center';
-        eliminarBtn.style.marginTop = '1rem';
-        eliminarBtn.innerHTML = `
-            <form action="/prestamos/${id}" method="POST"
-                  onsubmit="return confirm('¿Seguro que deseas eliminar este préstamo? Esta acción no se puede deshacer.');">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                        style="background-color:#dc2626; color:white; padding:0.5rem 1rem; border-radius:0.25rem; border:none; cursor:pointer;">
-                    <i class="fas fa-trash-alt"></i> Eliminar Préstamo
-                </button>
-            </form>
-        `;
-        planContainer.appendChild(eliminarBtn);
-
-        const selectEstado = document.getElementById('filtroEstado');
-        if (selectEstado) selectEstado.addEventListener('change', () => cargarPlan(id));
-    }
-
-    // ✅ Detectar parámetro ?prestamo=ID y seleccionar automáticamente
-    const urlParams = new URLSearchParams(window.location.search);
-    const prestamoId = urlParams.get('prestamo');
-
-    if (prestamoId) {
-        const li = document.querySelector(`#listaClientes li[data-id="${prestamoId}"]`);
-        if (li) {
-            seleccionar(li);
-            li.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
     }
 });
 </script>

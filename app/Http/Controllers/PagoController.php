@@ -962,11 +962,11 @@ public function verEstadoCuentaPDF($id)
 
 public function pagosHoy()
 {
-    $hoy = Carbon::today();
+    $hoy = \Carbon\Carbon::today();
     $cuotasHoy = [];
     $cuotasAtrasadas = [];
 
-    // Traer todos los prestamos activos
+    // Traer todos los préstamos activos con su cliente
     $prestamos = Prestamo::with('cliente')->where('estado', 'Activo')->get();
 
     foreach ($prestamos as $prestamo) {
@@ -974,17 +974,23 @@ public function pagosHoy()
         $cuotas = $this->generarPlanPagos($prestamo);
 
         foreach ($cuotas as $cuota) {
-            $fechaVence = Carbon::parse($cuota['vence']);
+            $fechaVence = \Carbon\Carbon::parse($cuota['vence']);
             $estado = $cuota['estado'];
+
+            // Agregar cliente y ID del préstamo a cada cuota
+            $cuotaConDatos = array_merge($cuota, [
+                'cliente' => $prestamo->cliente,
+                'prestamo_id' => $prestamo->id, // ✅ Aquí se incluye el ID del préstamo
+            ]);
 
             // Pagos que vencen hoy
             if ($fechaVence->isToday() && $estado === 'Pendiente') {
-                $cuotasHoy[] = array_merge($cuota, ['cliente' => $prestamo->cliente]);
+                $cuotasHoy[] = $cuotaConDatos;
             }
 
             // Pagos atrasados
-            if ($fechaVence->isPast() && in_array($estado, ['Pendiente','Parcial','Vencida'])) {
-                $cuotasAtrasadas[] = array_merge($cuota, ['cliente' => $prestamo->cliente]);
+            if ($fechaVence->isPast() && in_array($estado, ['Pendiente', 'Parcial', 'Vencida'])) {
+                $cuotasAtrasadas[] = $cuotaConDatos;
             }
         }
     }

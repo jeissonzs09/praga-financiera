@@ -226,6 +226,12 @@
     Pagos del Día
 </a>
 
+<a href="{{ route('prestamos.historial') }}" class="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-100 rounded transition">
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 6h18v2H3V6zm0 5h12v2H3v-2zm0 5h18v2H3v-2z"/>
+    </svg>
+    <span>Historial de Préstamos</span>
+</a>
 
 </div>
 

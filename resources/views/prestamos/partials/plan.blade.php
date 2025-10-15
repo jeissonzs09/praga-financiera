@@ -26,6 +26,28 @@
         </div>
     </div>
 
+@if($prestamo->estado === 'Activo')
+    <form method="POST" action="{{ route('prestamos.inactivar', $prestamo->id) }}"
+          onsubmit="return confirm('¿Estás seguro de que deseas marcar este préstamo como inactivo? Esta acción lo moverá al historial y no aparecerá en la vista principal.');">
+        @csrf
+        @method('PATCH')
+        <button type="submit"
+            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">
+            🛑 Marcar como Inactivo
+        </button>
+    </form>
+@else
+    <form method="POST" action="{{ route('prestamos.activar', $prestamo->id) }}"
+          onsubmit="return confirm('¿Deseas reactivar este préstamo? Volverá a aparecer en la vista principal.');">
+        @csrf
+        @method('PATCH')
+        <button type="submit"
+            class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow">
+            🔄 Reactivar Préstamo
+        </button>
+    </form>
+@endif
+
     {{-- 🔹 Filtro por estado --}}
     <div class="mb-2 flex justify-end items-center gap-2">
         <label for="filtroEstado" class="text-sm font-semibold">Mostrar:</label>
