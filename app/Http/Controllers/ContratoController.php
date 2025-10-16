@@ -6,6 +6,7 @@ use App\Models\Prestamo;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\NumeroHelper;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 
 class ContratoController extends Controller
@@ -319,5 +320,99 @@ public function generarAutorizacionModal(Request $request, Prestamo $prestamo)
         "Autorizacion-Credito PRAGA - {$prestamo->cliente->nombre_completo} - {$data['fechaAutorizacion']}.pdf"
     );
 }
+
+public function generarResumenOperacion(Request $request, Prestamo $prestamo)
+{
+    $data = $request->validate([
+        'gastosAdministrativos' => 'required|numeric',
+        'deduccionCentral' => 'required|numeric',
+        'capitalPendiente' => 'required|numeric',
+        'interesPendiente' => 'required|numeric',
+        'mora' => 'required|numeric',
+        'totalDeducciones' => 'required|numeric',
+        'totalEntregar' => 'required|numeric',
+    ]);
+
+    $prestamo->load('cliente');
+
+    $deducciones = [
+        'gastosAdministrativos' => $data['gastosAdministrativos'],
+        'deduccionCentral' => $data['deduccionCentral'],
+        'capitalPendiente' => $data['capitalPendiente'],
+        'interesPendiente' => $data['interesPendiente'],
+        'mora' => $data['mora'],
+        'totalDeducciones' => $data['totalDeducciones'],
+        'totalEntregar' => $data['totalEntregar'],
+    ];
+
+    return \Barryvdh\DomPDF\Facade\Pdf::loadView('contratos.resumen_operacion', [
+        'prestamo' => $prestamo,
+        'deducciones' => $deducciones,
+    ])
+    ->setPaper('letter')
+    ->download("Resumen-Operacion-Prestamo-{$prestamo->id}.pdf");
+}
+
+public function generarResumenOperacionModal(Request $request, Prestamo $prestamo)
+{
+    Carbon::setLocale('es');
+
+    // 🔹 Cargar relación con cliente
+    $prestamo->load('cliente');
+
+    // 🔹 Generar plan de cuotas
+    $plan = $this->generarPlan($prestamo) ?? [];
+
+    // 🔹 Datos clave del préstamo
+    $numeroPrestamo = $prestamo->id;
+    $montoAprobado  = (float) $prestamo->valor_prestamo;
+    $plazo          = (int) $prestamo->plazo;
+    $fechaInicial   = Carbon::parse($prestamo->fecha_inicio)->translatedFormat('d \d\e F \d\e\l Y');
+
+    $fechaFinal     = count($plan) > 0
+        ? Carbon::parse(end($plan)['vence'])->translatedFormat('d \d\e F \d\e\l Y')
+        : '—';
+
+    $numeroCuotas   = count($plan);
+    $valorCuota     = count($plan) > 0
+        ? number_format($plan[0]['total'], 2)
+        : '0.00';
+
+    $periodicidad   = ucfirst(strtolower($prestamo->periodo));
+    $diaPago        = count($plan) > 0
+        ? Carbon::parse($plan[0]['vence'])->translatedFormat('l')
+        : '—';
+
+    // 🔹 Datos de deducciones
+    $deducciones = [
+        'gastosAdministrativos' => (float) ($request->gastos_administrativos ?? 0),
+        'deduccionCentral'      => (float) ($request->deduccion_central ?? 0),
+        'capitalPendiente'      => (float) ($request->capital_pendiente ?? 0),
+        'interesPendiente'      => (float) ($request->interes_pendiente ?? 0),
+        'mora'                  => (float) ($request->mora ?? 0),
+        'totalDeducciones'      => (float) ($request->total_deducciones ?? 0),
+        'totalEntregar'         => (float) ($request->total_entregar ?? 0),
+    ];
+
+    // 🔹 Generar PDF con vista
+    $pdf = Pdf::loadView('contratos.resumen_operacion', compact(
+        'prestamo',
+        'numeroPrestamo',
+        'montoAprobado',
+        'plazo',
+        'fechaInicial',
+        'fechaFinal',
+        'numeroCuotas',
+        'valorCuota',
+        'periodicidad',
+        'diaPago',
+        'deducciones'
+    ));
+
+    return $pdf
+        ->setPaper('letter')
+        ->download("Resumen_Datos_{$prestamo->cliente->nombre_completo}.pdf");
+}
+
 
 }

@@ -60,32 +60,39 @@
                                 Documentos
                             </button>
 
-                            <div id="menu-{{ $prestamo->id }}" class="hidden absolute z-10 mt-2 w-48 bg-white border border-gray-300 rounded shadow">
-                                <a href="javascript:void(0);" 
-   onclick="abrirModalContrato({{ $prestamo->id }}, '{{ route('contratos.generarPdfModal', $prestamo->id) }}')"
-   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-   📄 Generar contrato
-</a>
-<a href="javascript:void(0);" 
-   onclick="abrirModalPagare({{ $prestamo->id }}, '{{ route('contratos.generarPagareModal', $prestamo->id) }}')"
-   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-   📝 Generar pagaré
-</a>
+<div id="menu-{{ $prestamo->id }}" class="hidden absolute z-10 mt-2 w-48 bg-white border border-gray-300 rounded shadow">
+    <a href="javascript:void(0);" 
+       onclick="abrirModalContrato({{ $prestamo->id }}, '{{ route('contratos.generarPdfModal', $prestamo->id) }}')"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+       📄 Generar contrato
+    </a>
 
-<a href="javascript:void(0);" 
-   onclick="abrirModalDeclaracion({{ $prestamo->id }}, '{{ route('contratos.generarDeclaracionModal', $prestamo->id) }}')"
-   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-   📑 Declaración de garantías
-</a>
+    <a href="javascript:void(0);" 
+       onclick="abrirModalPagare({{ $prestamo->id }}, '{{ route('contratos.generarPagareModal', $prestamo->id) }}')"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+       📝 Generar pagaré
+    </a>
 
-<a href="javascript:void(0);" 
-   onclick="abrirModalAutorizacion({{ $prestamo->id }}, '{{ route('contratos.generarAutorizacionModal', $prestamo->id) }}')"
-   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-   📝 Generar autorización
-</a>
+    <a href="javascript:void(0);" 
+       onclick="abrirModalDeclaracion({{ $prestamo->id }}, '{{ route('contratos.generarDeclaracionModal', $prestamo->id) }}')"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+       📑 Declaración de garantías
+    </a>
 
+    <a href="javascript:void(0);" 
+       onclick="abrirModalAutorizacion({{ $prestamo->id }}, '{{ route('contratos.generarAutorizacionModal', $prestamo->id) }}')"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+       📝 Generar autorización
+    </a>
 
-                            </div>
+    {{-- 🔹 Nuevo enlace para Resumen de Operación --}}
+    <a href="javascript:void(0);" 
+       onclick="abrirModalResumenOperacion({{ $prestamo->id }}, '{{ route('contratos.generarResumenOperacionModal', $prestamo->id) }}')"
+       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+       📊 Resumen de Datos
+    </a>
+</div>
+
                         </div>
                     </td>
                 </tr>
@@ -255,6 +262,100 @@
     </div>
 </div>
 
+<!-- 🔷 Modal Resumen Operación -->
+<div id="modalResumenOperacion" class="hidden">
+    <div class="modal-content">
+        <button onclick="toggleModalResumenOperacion(false)" class="close-button">✖</button>
+
+        <h2 class="text-base font-bold mb-3 text-center">Ingresar Deducciones</h2>
+        <form id="formResumenOperacion" method="POST">
+            @csrf
+            <input type="hidden" id="prestamo_id_resumen" name="prestamo_id">
+
+            <div class="mb-2">
+                <label>Gastos Administrativos (1%)</label>
+                <input type="number" name="gastos_administrativos" step="0.01" class="deduccion w-full border px-2 py-1" required>
+            </div>
+            <div class="mb-2">
+                <label>Deducción Central de Riesgos</label>
+                <input type="number" name="deduccion_central" step="0.01" class="deduccion w-full border px-2 py-1" required>
+            </div>
+            <div class="mb-2">
+                <label>Capital Pendiente</label>
+                <input type="number" name="capital_pendiente" step="0.01" class="deduccion w-full border px-2 py-1" required>
+            </div>
+            <div class="mb-2">
+                <label>Interés Pendiente</label>
+                <input type="number" name="interes_pendiente" step="0.01" class="deduccion w-full border px-2 py-1" required>
+            </div>
+            <div class="mb-2">
+                <label>Mora</label>
+                <input type="number" name="mora" step="0.01" class="deduccion w-full border px-2 py-1" required>
+            </div>
+
+            <div class="mb-2">
+                <label>Total Deducciones</label>
+                <input type="number" name="total_deducciones" step="0.01" id="total_deducciones" class="w-full border px-2 py-1" readonly required>
+            </div>
+
+            <div class="mb-2">
+                <label>Total a Entregar</label>
+                <input type="number" name="total_entregar" step="0.01" id="total_entregar" class="w-full border px-2 py-1" required>
+            </div>
+
+            <div class="flex justify-end mt-3">
+                <button type="button" onclick="toggleModalResumenOperacion(false)" class="mr-2 px-3 py-1 bg-gray-300 rounded">Cancelar</button>
+                <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded">Generar PDF</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 🔷 CSS -->
+<style>
+#modalResumenOperacion {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background-color: rgba(0,0,0,0.5);
+    overflow-y: auto;
+    padding-top: 6rem; /* separa del header */
+}
+
+#modalResumenOperacion.hidden {
+    display: none;
+}
+
+.modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 90%;
+    max-width: 480px;
+    padding: 1.5rem;
+    position: relative;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {opacity: 0; transform: translateY(20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+</style>
+
 <script>
     // Abrir y cerrar modal
     function toggleModal(open = true) {
@@ -366,4 +467,33 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- 🔷 JS -->
+<script>
+function toggleModalResumenOperacion(open = true) {
+    const modal = document.getElementById('modalResumenOperacion');
+    modal.style.display = open ? 'flex' : 'none';
+}
+
+function abrirModalResumenOperacion(prestamoId, url) {
+    toggleModalResumenOperacion(true);
+    const form = document.getElementById('formResumenOperacion');
+    form.action = url;
+    document.getElementById('prestamo_id_resumen').value = prestamoId;
+
+    // Limpiar campos al abrir
+    form.querySelectorAll('input').forEach(input => {
+        if(input.type === "number") input.value = '';
+    });
+}
+
+// Calcular total automáticamente cuando cambien los campos de deducción
+document.addEventListener('input', function(e){
+    if(e.target.classList.contains('deduccion')) {
+        const deducciones = document.querySelectorAll('.deduccion');
+        let total = 0;
+        deducciones.forEach(input => total += parseFloat(input.value) || 0);
+        document.getElementById('total_deducciones').value = total.toFixed(2);
+    }
+});
+</script>
 @endsection

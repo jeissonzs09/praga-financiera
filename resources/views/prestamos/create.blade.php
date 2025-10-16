@@ -114,12 +114,25 @@
         </div>
     </form>
 
+
     <!-- Resultado cálculo -->
     <div id="resultado" class="mt-6 hidden bg-gray-50 p-4 rounded shadow">
-        <h3 class="font-semibold mb-3">Resultado de la simulación</h3>
-        <p><strong>Cuota:</strong> <span id="cuota"></span></p>
-        <p><strong>Total a pagar:</strong> <span id="total"></span></p>
-        <p><strong>Intereses:</strong> <span id="intereses"></span></p>
+        <h3 class="font-semibold mb-3 text-center">INVERSIONES PRAGA - DETALLE DEL PRÉSTAMO</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-700 mb-4">
+            <div><strong>Cliente:</strong> <span id="cliente_display"></span></div>
+            <div><strong>Fecha inicio:</strong> <span id="fecha_inicio_display"></span></div>
+            <div><strong>Monto:</strong> L. <span id="monto_display"></span></div>
+            <div><strong>Interés:</strong> <span id="interes_display"></span>%</div>
+            <div><strong>Plazo:</strong> <span id="plazo_display"></span> meses</div>
+        </div>
+
+        <!-- Totales en línea -->
+        <div class="flex flex-wrap gap-6 text-sm font-semibold">
+            <div>Cuota: <span id="cuota"></span></div>
+            <div>Total Capital: <span id="total_capital"></span></div>
+            <div>Total Intereses: <span id="total_intereses"></span></div>
+            <div>Total General: <span id="total_general"></span></div>
+        </div>
     </div>
 
     <!-- Tabla de cuotas simuladas -->
@@ -128,15 +141,12 @@
 @endsection
 
 @section('scripts')
-<!-- jQuery necesario para Select2 -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Select2 CSS y JS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
 $(document).ready(function() {
-    // Inicializar Select2
     $('.select2').select2({
         placeholder: "-- Seleccione un cliente --",
         allowClear: true,
@@ -144,9 +154,6 @@ $(document).ready(function() {
     });
 });
 
-
-
-// Tu código de cálculo de préstamo
 document.getElementById('btn-calcular').addEventListener('click', function () {
     const monto = parseFloat(document.querySelector('[name="valor_prestamo"]').value);
     const tasaMensual = parseFloat(document.querySelector('[name="porcentaje_interes"]').value) / 100;
@@ -157,6 +164,9 @@ document.getElementById('btn-calcular').addEventListener('click', function () {
         alert('Por favor complete Monto, Interés, Plazo y Periodo para calcular.');
         return;
     }
+
+    const clienteSelect = document.querySelector('[name="cliente_id"]');
+    const clienteNombre = clienteSelect.options[clienteSelect.selectedIndex].text;
 
     let pagosPorMes = 1;
     if (periodo === 'Quincenal') pagosPorMes = 2;
@@ -170,9 +180,18 @@ document.getElementById('btn-calcular').addEventListener('click', function () {
     const totalIntereses = interesPorCuota * cuotas;
     const totalPagar = monto + totalIntereses;
 
+    // Totales en línea
+    document.getElementById('cliente_display').textContent = clienteNombre;
+    document.getElementById('fecha_inicio_display').textContent = document.getElementById('fecha_inicio').value;
+    document.getElementById('monto_display').textContent = monto.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+    document.getElementById('interes_display').textContent = (tasaMensual*100).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+    document.getElementById('plazo_display').textContent = plazoMeses;
+
     document.getElementById('cuota').textContent = 'L. ' + cuotaTotal.toFixed(2);
-    document.getElementById('total').textContent = 'L. ' + totalPagar.toFixed(2);
-    document.getElementById('intereses').textContent = 'L. ' + totalIntereses.toFixed(2);
+    document.getElementById('total_capital').textContent = 'L. ' + monto.toFixed(2);
+    document.getElementById('total_intereses').textContent = 'L. ' + totalIntereses.toFixed(2);
+    document.getElementById('total_general').textContent = 'L. ' + totalPagar.toFixed(2);
+
     document.getElementById('resultado').classList.remove('hidden');
 
     const formData = new FormData();
@@ -198,8 +217,13 @@ document.getElementById('btn-calcular').addEventListener('click', function () {
 });
 
 function mostrarTablaCuotas(cuotas) {
+    let totalCapital = 0;
+    let totalIntereses = 0;
+    let totalGeneral = 0;
+
     let html = `
-        <h3 class="font-semibold mb-3">Plan de pago simulado</h3>
+        <h3 class="font-semibold mb-3 text-center">Plan de pago simulado</h3>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm border rounded overflow-hidden">
             <thead class="bg-gray-100">
                 <tr>
@@ -219,15 +243,34 @@ function mostrarTablaCuotas(cuotas) {
             <tr class="border-t">
                 <td class="text-center px-2 py-1">${c.nro}</td>
                 <td class="px-2 py-1">${c.vence}</td>
-                <td class="px-2 py-1">L. ${c.capital.toFixed(2)}</td>
-                <td class="px-2 py-1">L. ${c.interes.toFixed(2)}</td>
-                <td class="px-2 py-1 font-bold">L. ${c.total.toFixed(2)}</td>
+                <td class="px-2 py-1 text-right">L. ${c.capital.toFixed(2)}</td>
+                <td class="px-2 py-1 text-right">L. ${c.interes.toFixed(2)}</td>
+                <td class="px-2 py-1 text-right font-bold">L. ${(c.capital + c.interes).toFixed(2)}</td>
                 <td class="px-2 py-1">${c.estado}</td>
             </tr>
         `;
+
+        totalCapital += c.capital;
+        totalIntereses += c.interes;
+        totalGeneral += (c.capital + c.interes);
     });
 
-    html += '</tbody></table>';
+    // Totales al final de la tabla
+    html += `
+        </tbody>
+        <tfoot class="bg-gray-50 font-semibold text-sm">
+            <tr>
+                <td colspan="2" class="px-2 py-1 text-right">Totales</td>
+                <td class="px-2 py-1 text-right">L. ${totalCapital.toFixed(2)}</td>
+                <td class="px-2 py-1 text-right">L. ${totalIntereses.toFixed(2)}</td>
+                <td class="px-2 py-1 text-right">L. ${totalGeneral.toFixed(2)}</td>
+                <td class="px-2 py-1">—</td>
+            </tr>
+        </tfoot>
+        </table>
+        </div>
+    `;
+
     document.getElementById('tabla-cuotas').innerHTML = html;
 }
 </script>

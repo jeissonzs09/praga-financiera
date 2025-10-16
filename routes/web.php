@@ -193,6 +193,11 @@ Route::get('/prestamos/historial', [PrestamoController::class, 'historial'])->na
 
 Route::patch('/prestamos/{id}/activar', [PrestamoController::class, 'activar'])->name('prestamos.activar');
 
+Route::post('contratos/{prestamo}/resumen-operacion', [ContratoController::class, 'generarResumenOperacionModal'])
+    ->name('contratos.generarResumenOperacionModal');
 
+    Route::post('/contratos/{prestamo}/resumen-operacion', [ContratoController::class, 'generarResumenOperacionModal'])->name('contratos.generarResumenOperacionModal');
+
+    
 // ✅ Incluye rutas adicionales generadas por Breeze/Fortify/etc.
 //require __DIR__.'/auth.php';
